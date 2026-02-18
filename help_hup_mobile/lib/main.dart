@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'features/auth/provider/auth_provider.dart';
 import 'features/auth/ui/login_screen.dart';
-import 'features/home/ui/home_screen.dart';
+import 'features/auth/ui/token_display_screen.dart';
 
 void main() async {
   // Ensure Flutter engine is initialized before any plugin calls
@@ -48,7 +48,7 @@ class _AuthWrapper extends StatelessWidget {
           case AuthStatus.initial:
             return const _SplashScreen();
           case AuthStatus.authenticated:
-            return const HomeScreen();
+            return const TokenDisplayScreen();
           default:
             return const LoginScreen();
         }

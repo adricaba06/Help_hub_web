@@ -4,16 +4,18 @@ import '../models/user_response.dart';
 
 // Guarda y recupera datos en el móvil (aunque cierres la app)
 class StorageService {
+  static const String _tokenKey = 'auth_token';
+
   // Guarda el token JWT en el móvil
   Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', token);
+    await prefs.setString(_tokenKey, token);
   }
 
   // Obtiene el token guardado (null si no hay sesión)
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token');
+    return prefs.getString(_tokenKey);
   }
 
   // Guarda los datos del usuario en el móvil
