@@ -36,11 +36,11 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _submit({bool useTestToken = false}) async {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     await context
         .read<AuthProvider>()
-        .login(_emailCtrl.text.trim(), _passCtrl.text, useTestToken: useTestToken);
+        .login(_emailCtrl.text.trim(), _passCtrl.text);
   }
 
   void _fillTestAccount(String email, String password) {
@@ -482,8 +482,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           isLoading: isLoading,
                           onTap: () {
                             _fillTestAccount(acc.email, acc.password);
-                            // Use test token for these accounts
-                            Future.microtask(() => _submit(useTestToken: true));
+                            Future.microtask(() => _submit());
                           },
                         ),
                       ),

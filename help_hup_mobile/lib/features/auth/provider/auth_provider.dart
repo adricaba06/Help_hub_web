@@ -1,69 +1,74 @@
 import 'package:flutter/material.dart';
-import '../../../core/models/login_request.dart';
 import '../../../core/models/user_response.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/storage_service.dart';
 
+// Estados posibles de la autenticación
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final StorageService _storageService = StorageService();
 
-  AuthStatus _status = AuthStatus.initial;
-  UserResponse? _currentUser;
-  String? _errorMessage;
-
-  AuthStatus get status => _status;
-  UserResponse? get currentUser => _currentUser;
-  String? get errorMessage => _errorMessage;
+  // Estado actual y datos del usuario
+  AuthStatus status = AuthStatus.initial;
+  UserResponse? currentUser;
+  String? errorMessage;
 
   AuthProvider() {
-    _restore();
+    // Al arrancar la app, comprobamos si ya había sesión guardada
+    _comprobarSesionGuardada();
   }
 
-  Future<void> _restore() async {
-    final loggedIn = await _storageService.isLoggedIn();
-    if (loggedIn) {
-      _currentUser = await _storageService.getUser();
-      _status = AuthStatus.authenticated;
+  Future<void> _comprobarSesionGuardada() async {
+    final hayToken = await _storageService.isLoggedIn();
+    if (hayToken) {
+      currentUser = await _storageService.getUser();
+      status = AuthStatus.authenticated;
     } else {
-      _status = AuthStatus.unauthenticated;
+      status = AuthStatus.unauthenticated;
     }
     notifyListeners();
   }
 
-  Future<void> login(String email, String password, {bool useTestToken = false}) async {
-    _status = AuthStatus.loading;
-    _errorMessage = null;
+  // Hace login contra la API
+  Future<void> login(String email, String password) async {
+    status = AuthStatus.loading;
+    errorMessage = null;
     notifyListeners();
 
     try {
-      final response = useTestToken
-          ? _authService.buildTestResponse(email)
-          : await _authService.login(LoginRequest(email: email, password: password));
+      // Llama a la API y obtiene token + usuario
+      final respuesta = await _authService.login(email, password);
 
-      await _storageService.saveToken(response.token);
-      await _storageService.saveUser(response.user);
-      _currentUser = response.user;
-      _status = AuthStatus.authenticated;
+      // Guarda el token y el usuario en el móvil
+      await _storageService.saveToken(respuesta.token);
+      await _storageService.saveUser(respuesta.user);
+
+      // Actualiza el estado
+      currentUser = respuesta.user;
+      status = AuthStatus.authenticated;
     } catch (e) {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      _status = AuthStatus.error;
+      // Si algo falla, guardamos el mensaje de error
+      errorMessage = e.toString().replaceFirst('Exception: ', '');
+      status = AuthStatus.error;
     }
+
     notifyListeners();
   }
 
+  // Cierra sesión y borra los datos guardados
   Future<void> logout() async {
     await _storageService.clear();
-    _currentUser = null;
-    _status = AuthStatus.unauthenticated;
+    currentUser = null;
+    status = AuthStatus.unauthenticated;
     notifyListeners();
   }
 
+  // Limpia el mensaje de error
   void clearError() {
-    _errorMessage = null;
-    _status = AuthStatus.unauthenticated;
+    errorMessage = null;
+    status = AuthStatus.unauthenticated;
     notifyListeners();
   }
 }

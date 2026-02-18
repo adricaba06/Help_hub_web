@@ -2,44 +2,43 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_response.dart';
 
+// Guarda y recupera datos en el móvil (aunque cierres la app)
 class StorageService {
-  static const _tokenKey = 'auth_token';
-  static const _userKey = 'auth_user';
-
+  // Guarda el token JWT en el móvil
   Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
+    await prefs.setString('token', token);
   }
 
+  // Obtiene el token guardado (null si no hay sesión)
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
+    return prefs.getString('token');
   }
 
+  // Guarda los datos del usuario en el móvil
   Future<void> saveUser(UserResponse user) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userKey, user.toRawJson());
+    await prefs.setString('user', jsonEncode(user.toJson()));
   }
 
+  // Obtiene los datos del usuario guardado
   Future<UserResponse?> getUser() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_userKey);
-    if (raw == null) return null;
-    try {
-      return UserResponse.fromJson(json.decode(raw) as Map<String, dynamic>);
-    } catch (_) {
-      return null;
-    }
+    final texto = prefs.getString('user');
+    if (texto == null) return null;
+    return UserResponse.fromJson(jsonDecode(texto));
   }
 
+  // Comprueba si hay sesión activa
   Future<bool> isLoggedIn() async {
     final token = await getToken();
-    return token != null && token.isNotEmpty;
+    return token != null;
   }
 
+  // Borra todo al hacer logout
   Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userKey);
+    await prefs.clear();
   }
 }
