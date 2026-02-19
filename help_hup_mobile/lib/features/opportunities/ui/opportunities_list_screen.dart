@@ -151,15 +151,6 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                               ? () => provider.setDateRange(null, null)
                               : null,
                         ),
-                        const SizedBox(width: 8),
-                        _buildFilterChip(
-                          icon: Icons.category,
-                          label: 'Categorías',
-                          hasDropdown: true,
-                          isActive: false,
-                          onTap: () {},
-                          onClear: null,
-                        ),
                       ],
                     ),
                   ),
