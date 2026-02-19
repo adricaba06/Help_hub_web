@@ -7,12 +7,36 @@ import 'storage_service.dart';
 class OpportunityService {
   final StorageService _storage = StorageService();
 
-  Future<List<OpportunityResponse>> searchOpportunities(String query) async {
+  Future<List<OpportunityResponse>> searchOpportunities({
+    String? query,
+    String? city,
+    DateTime? dateFrom,
+    DateTime? dateTo,
+  }) async {
     try {
       final token = await _storage.getToken();
       
+      // Construir queryParameters dinámicamente
+      final Map<String, String> queryParams = {};
+      
+      if (query != null && query.isNotEmpty) {
+        queryParams['q'] = query;
+      }
+      
+      if (city != null && city.isNotEmpty) {
+        queryParams['city'] = city;
+      }
+      
+      if (dateFrom != null) {
+        queryParams['dateFrom'] = '${dateFrom.year.toString().padLeft(4, '0')}-${dateFrom.month.toString().padLeft(2, '0')}-${dateFrom.day.toString().padLeft(2, '0')}';
+      }
+      
+      if (dateTo != null) {
+        queryParams['dateTo'] = '${dateTo.year.toString().padLeft(4, '0')}-${dateTo.month.toString().padLeft(2, '0')}-${dateTo.day.toString().padLeft(2, '0')}';
+      }
+      
       final uri = Uri.parse(AppConfig.opportunitiesUrl).replace(
-        queryParameters: query.isEmpty ? null : {'q': query},
+        queryParameters: queryParams.isEmpty ? null : queryParams,
       );
 
       final response = await http.get(

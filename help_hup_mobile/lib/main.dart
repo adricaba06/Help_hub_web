@@ -53,10 +53,12 @@ class _AuthWrapper extends StatelessWidget {
       builder: (context, auth, _) {
         switch (auth.status) {
           case AuthStatus.initial:
+          case AuthStatus.loading:
             return const _SplashScreen();
           case AuthStatus.authenticated:
             return const OpportunitiesListScreen();
-          default:
+          case AuthStatus.unauthenticated:
+          case AuthStatus.error:
             return const LoginScreen();
         }
       },
