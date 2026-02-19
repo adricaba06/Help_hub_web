@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'features/auth/provider/auth_provider.dart';
 import 'features/auth/ui/login_screen.dart';
-import 'features/auth/ui/token_display_screen.dart';
+import 'features/opportunities/provider/opportunity_provider.dart';
+import 'features/opportunities/ui/opportunities_list_screen.dart';
 
 void main() async {
   // Ensure Flutter engine is initialized before any plugin calls
   WidgetsFlutterBinding.ensureInitialized();
   // Pre-warm SharedPreferences so the first frame has no async wait
   await SharedPreferences.getInstance();
+  // Initialize date formatting for Spanish locale
+  await initializeDateFormatting('es', null);
   runApp(const HelpHubApp());
 }
 
@@ -18,8 +22,11 @@ class HelpHubApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => OpportunityProvider()),
+      ],
       child: MaterialApp(
         title: 'HelpHub',
         debugShowCheckedModeBanner: false,
@@ -48,7 +55,7 @@ class _AuthWrapper extends StatelessWidget {
           case AuthStatus.initial:
             return const _SplashScreen();
           case AuthStatus.authenticated:
-            return const TokenDisplayScreen();
+            return const OpportunitiesListScreen();
           default:
             return const LoginScreen();
         }
