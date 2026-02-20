@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'user_response.dart';
 
 class AuthResponse {
@@ -11,7 +10,4 @@ class AuthResponse {
         token: json['token'] as String,
         user: UserResponse.fromJson(json['user'] as Map<String, dynamic>),
       );
-
-  static AuthResponse fromRawJson(String str) =>
-      AuthResponse.fromJson(json.decode(str));
 }
