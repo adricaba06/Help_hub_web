@@ -1,27 +1,104 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:help_hup_mobile/core/services/UserService.dart';
-import 'package:help_hup_mobile/features/register_page/bloc/register_page_bloc.dart';
-import 'package:help_hup_mobile/features/register_page/ui/register_page_view.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'features/auth/provider/auth_provider.dart';
+import 'features/auth/ui/login_screen.dart';
+import 'features/auth/ui/token_display_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  // Ensure Flutter engine is initialized before any plugin calls
+  WidgetsFlutterBinding.ensureInitialized();
+  // Pre-warm SharedPreferences so the first frame has no async wait
+  await SharedPreferences.getInstance();
+  runApp(const HelpHubApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class HelpHubApp extends StatelessWidget {
+  const HelpHubApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF10B77F)),
+    return ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
+      child: MaterialApp(
+        title: 'HelpHub',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF10B77F),
+            primary: const Color(0xFF10B77F),
+          ),
+          useMaterial3: true,
+          fontFamily: 'Inter',
+        ),
+        home: const _AuthWrapper(),
       ),
-      home: BlocProvider(
-        create: (_) => RegisterPageBloc(userService: Userservice()),
-        child: const RegisterPageView(),
+    );
+  }
+}
+
+class _AuthWrapper extends StatelessWidget {
+  const _AuthWrapper();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, auth, _) {
+        switch (auth.status) {
+          case AuthStatus.initial:
+            return const _SplashScreen();
+          case AuthStatus.authenticated:
+            return const TokenDisplayScreen();
+          default:
+            return const LoginScreen();
+        }
+      },
+    );
+  }
+}
+
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: Color(0xFFF6F8F7),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 44,
+              backgroundColor: Color(0xFF10B77F),
+              child: Icon(Icons.volunteer_activism, color: Colors.white, size: 48),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'HelpHub',
+              style: TextStyle(
+                color: Color(0xFF18181B),
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Tu ayuda importa',
+              style: TextStyle(color: Color(0xFF52525B), fontSize: 15),
+            ),
+            SizedBox(height: 40),
+            SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(
+                color: Color(0xFF10B77F),
+                strokeWidth: 2.5,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
