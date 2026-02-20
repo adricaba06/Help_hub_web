@@ -86,7 +86,7 @@ class OpportunityCard extends StatelessWidget {
                       child: Icon(
                         Icons.volunteer_activism,
                         size: 64,
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                       ),
                     );
                   },

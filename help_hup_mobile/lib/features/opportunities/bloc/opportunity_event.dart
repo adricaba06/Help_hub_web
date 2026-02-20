@@ -21,5 +21,3 @@ class OpportunityDateRangeChanged extends OpportunityEvent {
 
   OpportunityDateRangeChanged(this.dateFrom, this.dateTo);
 }
-
-class OpportunityFiltersCleared extends OpportunityEvent {}

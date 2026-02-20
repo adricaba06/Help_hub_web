@@ -13,7 +13,6 @@ class OpportunityBloc extends Bloc<OpportunityEvent, OpportunityState> {
     on<OpportunitySearchRequested>(_onSearchRequested);
     on<OpportunityCityFilterChanged>(_onCityFilterChanged);
     on<OpportunityDateRangeChanged>(_onDateRangeChanged);
-    on<OpportunityFiltersCleared>(_onFiltersCleared);
   }
 
   String? _currentCity;
@@ -124,40 +123,4 @@ class OpportunityBloc extends Bloc<OpportunityEvent, OpportunityState> {
     }
   }
 
-  Future<void> _onFiltersCleared(
-    OpportunityFiltersCleared event,
-    Emitter<OpportunityState> emit,
-  ) async {
-    _currentCity = null;
-    _currentDateFrom = null;
-    _currentDateTo = null;
-    _currentSearchQuery = '';
-    emit(OpportunityLoading());
-
-    try {
-      final opportunities = await opportunityService.searchOpportunities(
-        query: null,
-        city: null,
-        dateFrom: null,
-        dateTo: null,
-      );
-
-      emit(OpportunityLoaded(
-        opportunities: opportunities,
-        selectedCity: null,
-        filterDateFrom: null,
-        filterDateTo: null,
-        searchQuery: '',
-      ));
-    } catch (e) {
-      final errorMessage = e.toString().replaceFirst('Exception: ', '');
-      emit(OpportunityError(
-        message: errorMessage,
-        selectedCity: null,
-        filterDateFrom: null,
-        filterDateTo: null,
-        searchQuery: '',
-      ));
-    }
-  }
 }
