@@ -1,0 +1,287 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../provider/opportunity_detail_provider.dart';
+
+class OpportunityDetailScreen extends StatefulWidget {
+  final int opportunityId;
+
+  const OpportunityDetailScreen({super.key, required this.opportunityId});
+
+  @override
+  State<OpportunityDetailScreen> createState() =>
+      _OpportunityDetailScreenState();
+}
+
+class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<OpportunityDetailProvider>().load(widget.opportunityId);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF6F8F7),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          'Detalle de oportunidad',
+          style: TextStyle(
+              color: Color(0xFF18181B), fontWeight: FontWeight.w700),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF52525B)),
+      ),
+      body: Consumer<OpportunityDetailProvider>(
+        builder: (_, provider, _) {
+          if (provider.isLoading) {
+            return const Center(
+              child:
+                  CircularProgressIndicator(color: Color(0xFF10B77F)),
+            );
+          }
+
+          if (provider.errorMessage != null) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  provider.errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Color(0xFF52525B)),
+                ),
+              ),
+            );
+          }
+
+          final detail = provider.detail;
+          if (detail == null) {
+            return const Center(child: Text('Sin datos.'));
+          }
+
+          final opp = detail.opportunity;
+          final formatter = DateFormat('d MMM y', 'es');
+          final dateRange =
+              '${formatter.format(opp.dateFrom)} - ${formatter.format(opp.dateTo)}';
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Estado
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: opp.isOpen
+                          ? const Color(0xFF10B77F)
+                          : const Color(0xFFA1A1AA),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      opp.isOpen ? 'ABIERTA' : 'CERRADA',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Título
+                Text(
+                  opp.title,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF18181B),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                _rowIconText(Icons.location_on_outlined, opp.city),
+                const SizedBox(height: 8),
+                _rowIconText(Icons.calendar_today_outlined, dateRange),
+
+                if (opp.description.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    opp.description,
+                    style: const TextStyle(
+                        color: Color(0xFF52525B), fontSize: 14, height: 1.5),
+                  ),
+                ],
+
+                const SizedBox(height: 16),
+                _infoBox(detail.acceptedCount, detail.seatsLeft, opp.seats),
+
+                const SizedBox(height: 20),
+
+                // Botón solicitar (voluntario que puede aplicar)
+                if (detail.canApply)
+                  ElevatedButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content:
+                                Text('TODO: Enviar solicitud (feat-003)')),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B77F),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Text('Enviar solicitud'),
+                  ),
+
+                // Ver solicitud propia (ya aplicó)
+                if (detail.hasApplied &&
+                    detail.myApplicationId != null) ...[
+                  const SizedBox(height: 10),
+                  OutlinedButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(
+                                'TODO: Ver solicitud #${detail.myApplicationId} (feat-015)')),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF10B77F),
+                      side: const BorderSide(color: Color(0xFF10B77F)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Text('Ver mi solicitud'),
+                  ),
+                ],
+
+                // Editar / Eliminar (manager/admin)
+                if (detail.canEdit || detail.canDelete) ...[
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      if (detail.canEdit)
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        Text('TODO: Editar (manager)')),
+                              );
+                            },
+                            child: const Text('Editar'),
+                          ),
+                        ),
+                      if (detail.canEdit && detail.canDelete)
+                        const SizedBox(width: 10),
+                      if (detail.canDelete)
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        Text('TODO: Eliminar (manager)')),
+                              );
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.red,
+                              side: const BorderSide(color: Colors.red),
+                            ),
+                            child: const Text('Eliminar'),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _rowIconText(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: const Color(0xFF52525B)),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style:
+                const TextStyle(color: Color(0xFF52525B), fontSize: 14),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _infoBox(int accepted, int left, int totalSeats) {
+    final value = totalSeats == 0
+        ? 0.0
+        : (accepted / totalSeats).clamp(0.0, 1.0);
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE4E4E7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Plazas',
+            style: TextStyle(
+                color: Color(0xFF18181B), fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Aceptadas: $accepted',
+                  style: const TextStyle(color: Color(0xFF52525B))),
+              Text('Libres: $left',
+                  style: const TextStyle(color: Color(0xFF52525B))),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: value,
+              backgroundColor: const Color(0xFFE4E4E7),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                  Color(0xFF10B77F)),
+              minHeight: 8,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '$accepted/$totalSeats ocupadas',
+            style: const TextStyle(
+                color: Color(0xFF10B77F), fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+}

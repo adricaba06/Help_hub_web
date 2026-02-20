@@ -4,6 +4,12 @@ class AppConfig {
 
   static const String loginUrl = '$baseUrl/auth/login';
 
+  // Listado de oportunidades
+  static const String opportunitiesUrl = '$baseUrl/opportunity';
+
+  // Detalle de oportunidad por id
+  static String opportunityDetailUrl(int id) => '$opportunitiesUrl/$id';
+
   // Hardcoded token for testing (bypasses API login when isTestMode = true)
   static const String testToken =
       'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9'
