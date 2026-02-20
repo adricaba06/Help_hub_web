@@ -18,8 +18,9 @@ class OpportunityCard extends StatelessWidget {
   }
 
   String _formatProgress() {
-    // Por ahora mostramos 15 ocupadas de ejemplo
-    final occupied = 15;
+    // Calculamos las plazas ocupadas pero sin exceder el límite
+    // Por ahora usamos 0 hasta que el backend proporcione el dato real
+    final occupied = 0;
     return '$occupied/${opportunity.seats} ocupadas';
   }
 
@@ -72,15 +73,36 @@ class OpportunityCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                child: Container(
+                child: Image.network(
+                  _getImageForOpportunity(),
                   height: 180,
                   width: double.infinity,
-                  color: const Color(0xFFE4E4E7),
-                  child: Icon(
-                    Icons.volunteer_activism,
-                    size: 64,
-                    color: Colors.white.withOpacity(0.5),
-                  ),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 180,
+                      width: double.infinity,
+                      color: const Color(0xFFE4E4E7),
+                      child: Icon(
+                        Icons.volunteer_activism,
+                        size: 64,
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                    );
+                  },
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      height: 180,
+                      width: double.infinity,
+                      color: const Color(0xFFE4E4E7),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF10B77F),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
               // Badge de estado
@@ -103,28 +125,6 @@ class OpportunityCard extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
                     ),
-                  ),
-                ),
-              ),
-              // Botón favorito
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.favorite_border, color: Color(0xFF52525B)),
-                    iconSize: 20,
-                    onPressed: () {},
                   ),
                 ),
               ),
@@ -239,7 +239,7 @@ class OpportunityCard extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
-                        value: 15 / opportunity.seats,
+                        value: 0,
                         backgroundColor: const Color(0xFFE4E4E7),
                         valueColor: const AlwaysStoppedAnimation<Color>(
                           Color(0xFF10B77F),

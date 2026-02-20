@@ -91,8 +91,7 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
             ),
             
             // Campo de búsqueda
-            Container(
-              color: Colors.white,
+            Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
               child: TextField(
                 controller: _searchController,
@@ -107,7 +106,7 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                     color: Color(0xFF52525B),
                   ),
                   filled: true,
-                  fillColor: const Color(0xFFF6F8F7),
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
@@ -123,8 +122,7 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
             // Chips de filtros
             Consumer<OpportunityProvider>(
               builder: (context, provider, _) {
-                return Container(
-                  color: Colors.white,
+                return Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -239,42 +237,9 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
 
                   return CustomScrollView(
                     slivers: [
-                      // Header "Oportunidades destacadas"
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Oportunidades destacadas',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF18181B),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  // Acción para ver todas
-                                },
-                                child: const Text(
-                                  'Ver todas',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF10B77F),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      
                       // Lista de oportunidades
                       SliverPadding(
-                        padding: const EdgeInsets.only(top: 8, bottom: 16),
+                        padding: const EdgeInsets.only(top: 16, bottom: 16),
                         sliver: SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
@@ -394,7 +359,7 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF10B77F) : const Color(0xFFE4E4E7),
+          color: const Color(0xFF10B77F),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -403,23 +368,23 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
             Icon(
               icon,
               size: 16,
-              color: isActive ? Colors.white : const Color(0xFF52525B),
+              color: Colors.white,
             ),
             const SizedBox(width: 6),
             Text(
               label,
-              style: TextStyle(
-                color: isActive ? Colors.white : const Color(0xFF52525B),
+              style: const TextStyle(
+                color: Colors.white,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
             ),
             if (hasDropdown && !isActive) ...[
               const SizedBox(width: 4),
-              Icon(
+              const Icon(
                 Icons.keyboard_arrow_down,
                 size: 18,
-                color: isActive ? Colors.white : const Color(0xFF52525B),
+                color: Colors.white,
               ),
             ],
             if (isActive && onClear != null) ...[
