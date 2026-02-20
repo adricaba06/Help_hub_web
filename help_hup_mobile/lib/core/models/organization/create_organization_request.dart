@@ -9,7 +9,6 @@ class CreateOrganizationRequest {
     required this.logoFieldId,
   });
 
-  // Para enviar al backend
   Map<String, dynamic> toJson() => {
         'name': name,
         'city': city,

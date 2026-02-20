@@ -3,6 +3,7 @@ import 'package:help_hup_mobile/core/models/organization/create_organization_req
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
 import 'package:help_hup_mobile/features/organization/create_organization_form_page/bloc/create_organization_form_page_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:help_hup_mobile/features/organization/organization_list/ui/organization_list_manager_view.dart';
 
 class AppColors {
   static const Color dark = Color(0xFF111827);
@@ -349,9 +350,9 @@ class _CrearOrganizacionScreenState extends State<CrearOrganizacionScreen> {
                   onPressed: () {
                     if (_nombreController.text.isEmpty ||
                         selectedCity == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('INVALIDO')),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(const SnackBar(content: Text('INVALIDO')));
                       return;
                     }
 
@@ -365,6 +366,14 @@ class _CrearOrganizacionScreenState extends State<CrearOrganizacionScreen> {
 
                     context.read<CreateOrganizationFormPageBloc>().add(
                       SubmitCreateOrganization(organizationRequest: request),
+                    );
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const OrganizationListManagerView(),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.save_alt_outlined, size: 20),
