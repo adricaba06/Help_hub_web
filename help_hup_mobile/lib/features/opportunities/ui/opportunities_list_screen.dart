@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/widgets/app_bottom_nav_bar.dart';
-import '../../auth/provider/auth_provider.dart';
-import '../provider/opportunity_provider.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../bloc/opportunity_bloc.dart';
 import '../widgets/opportunity_card.dart';
 
 class OpportunitiesListScreen extends StatefulWidget {
@@ -38,7 +38,7 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
       // Cargar con un pequeño delay para asegurar que el token esté listo
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) {
-          context.read<OpportunityProvider>().searchOpportunities('');
+          context.read<OpportunityBloc>().add(OpportunitySearchRequested(''));
         }
       });
     }
@@ -48,8 +48,8 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       context
-          .read<OpportunityProvider>()
-          .searchOpportunities(_searchController.text.trim());
+          .read<OpportunityBloc>()
+          .add(OpportunitySearchRequested(_searchController.text.trim()));
     });
   }
 
@@ -82,7 +82,7 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                   IconButton(
                     icon: const Icon(Icons.logout_outlined, color: Color(0xFF52525B)),
                     onPressed: () {
-                      context.read<AuthProvider>().logout();
+                      context.read<AuthBloc>().add(AuthLogoutRequested());
                     },
                     tooltip: 'Cerrar sesión',
                   ),
@@ -120,8 +120,22 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
             ),
 
             // Chips de filtros
-            Consumer<OpportunityProvider>(
-              builder: (context, provider, _) {
+            BlocBuilder<OpportunityBloc, OpportunityState>(
+              builder: (context, state) {
+                String? selectedCity;
+                DateTime? filterDateFrom;
+                DateTime? filterDateTo;
+
+                if (state is OpportunityLoaded) {
+                  selectedCity = state.selectedCity;
+                  filterDateFrom = state.filterDateFrom;
+                  filterDateTo = state.filterDateTo;
+                } else if (state is OpportunityError) {
+                  selectedCity = state.selectedCity;
+                  filterDateFrom = state.filterDateFrom;
+                  filterDateTo = state.filterDateTo;
+                }
+
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: SingleChildScrollView(
@@ -130,23 +144,23 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                       children: [
                         _buildFilterChip(
                           icon: Icons.location_on,
-                          label: provider.selectedCity ?? 'Ciudad',
+                          label: selectedCity ?? 'Ciudad',
                           hasDropdown: true,
-                          isActive: provider.selectedCity != null,
+                          isActive: selectedCity != null,
                           onTap: _showCityFilterDialog,
-                          onClear: provider.selectedCity != null 
-                              ? () => provider.setCity(null) 
+                          onClear: selectedCity != null 
+                              ? () => context.read<OpportunityBloc>().add(OpportunityCityFilterChanged(null))
                               : null,
                         ),
                         const SizedBox(width: 8),
                         _buildFilterChip(
                           icon: Icons.calendar_today,
-                          label: _getDateRangeLabel(provider),
+                          label: _getDateRangeLabel(filterDateFrom, filterDateTo),
                           hasDropdown: true,
-                          isActive: provider.filterDateFrom != null || provider.filterDateTo != null,
+                          isActive: filterDateFrom != null || filterDateTo != null,
                           onTap: _showDateRangeDialog,
-                          onClear: provider.filterDateFrom != null || provider.filterDateTo != null
-                              ? () => provider.setDateRange(null, null)
+                          onClear: filterDateFrom != null || filterDateTo != null
+                              ? () => context.read<OpportunityBloc>().add(OpportunityDateRangeChanged(null, null))
                               : null,
                         ),
                       ],
@@ -158,9 +172,9 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
             
             // Lista de oportunidades
             Expanded(
-              child: Consumer<OpportunityProvider>(
-                builder: (context, provider, _) {
-                  if (provider.isLoading) {
+              child: BlocBuilder<OpportunityBloc, OpportunityState>(
+                builder: (context, state) {
+                  if (state is OpportunityLoading) {
                     return const Center(
                       child: CircularProgressIndicator(
                         color: Color(0xFF10B77F),
@@ -168,7 +182,7 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                     );
                   }
 
-                  if (provider.errorMessage != null) {
+                  if (state is OpportunityError) {
                     return Center(
                       child: Padding(
                         padding: const EdgeInsets.all(24),
@@ -182,7 +196,7 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              provider.errorMessage!,
+                              state.message,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Color(0xFF52525B),
@@ -192,8 +206,8 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                             const SizedBox(height: 16),
                             ElevatedButton(
                               onPressed: () {
-                                provider.searchOpportunities(
-                                    _searchController.text.trim());
+                                context.read<OpportunityBloc>().add(
+                                    OpportunitySearchRequested(_searchController.text.trim()));
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF10B77F),
@@ -210,48 +224,61 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                     );
                   }
 
-                  if (provider.opportunities.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.search_off,
-                            size: 64,
-                            color: Color(0xFFA1A1AA),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _searchController.text.isEmpty
-                                ? 'No hay oportunidades disponibles'
-                                : 'No se encontraron oportunidades',
-                            style: const TextStyle(
-                              color: Color(0xFF52525B),
-                              fontSize: 14,
+                  if (state is OpportunityLoaded) {
+                    if (state.opportunities.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.search_off,
+                              size: 64,
+                              color: Color(0xFFA1A1AA),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _searchController.text.isEmpty
+                                  ? 'No hay oportunidades disponibles'
+                                  : 'No se encontraron oportunidades',
+                              style: const TextStyle(
+                                color: Color(0xFF52525B),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return CustomScrollView(
+                      slivers: [
+                        // Lista de oportunidades
+                        SliverPadding(
+                          padding: const EdgeInsets.only(top: 16, bottom: 16),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                return OpportunityCard(
+                                  opportunity: state.opportunities[index],
+                                );
+                              },
+                              childCount: state.opportunities.length,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     );
                   }
 
-                  return CustomScrollView(
-                    slivers: [
-                      // Lista de oportunidades
-                      SliverPadding(
-                        padding: const EdgeInsets.only(top: 16, bottom: 16),
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              return OpportunityCard(
-                                opportunity: provider.opportunities[index],
-                              );
-                            },
-                            childCount: provider.opportunities.length,
-                          ),
-                        ),
+                  // Estado inicial
+                  return const Center(
+                    child: Text(
+                      'Bienvenido a HelpHub',
+                      style: TextStyle(
+                        color: Color(0xFF52525B),
+                        fontSize: 16,
                       ),
-                    ],
+                    ),
                   );
                 },
               ),
@@ -268,15 +295,15 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
     );
   }
 
-  String _getDateRangeLabel(OpportunityProvider provider) {
-    if (provider.filterDateFrom != null && provider.filterDateTo != null) {
-      final from = '${provider.filterDateFrom!.day}/${provider.filterDateFrom!.month}';
-      final to = '${provider.filterDateTo!.day}/${provider.filterDateTo!.month}';
+  String _getDateRangeLabel(DateTime? filterDateFrom, DateTime? filterDateTo) {
+    if (filterDateFrom != null && filterDateTo != null) {
+      final from = '${filterDateFrom.day}/${filterDateFrom.month}';
+      final to = '${filterDateTo.day}/${filterDateTo.month}';
       return '$from - $to';
-    } else if (provider.filterDateFrom != null) {
-      return 'Desde ${provider.filterDateFrom!.day}/${provider.filterDateFrom!.month}';
-    } else if (provider.filterDateTo != null) {
-      return 'Hasta ${provider.filterDateTo!.day}/${provider.filterDateTo!.month}';
+    } else if (filterDateFrom != null) {
+      return 'Desde ${filterDateFrom.day}/${filterDateFrom.month}';
+    } else if (filterDateTo != null) {
+      return 'Hasta ${filterDateTo.day}/${filterDateTo.month}';
     }
     return 'Fechas';
   }
@@ -311,20 +338,33 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
     );
 
     if (selectedCity != null && mounted) {
-      context.read<OpportunityProvider>().setCity(selectedCity);
+      context.read<OpportunityBloc>().add(OpportunityCityFilterChanged(selectedCity));
     }
   }
 
   Future<void> _showDateRangeDialog() async {
+    final bloc = context.read<OpportunityBloc>();
+    final currentState = bloc.state;
+    
+    DateTime? currentDateFrom;
+    DateTime? currentDateTo;
+    
+    if (currentState is OpportunityLoaded) {
+      currentDateFrom = currentState.filterDateFrom;
+      currentDateTo = currentState.filterDateTo;
+    } else if (currentState is OpportunityError) {
+      currentDateFrom = currentState.filterDateFrom;
+      currentDateTo = currentState.filterDateTo;
+    }
+    
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
-      initialDateRange: context.read<OpportunityProvider>().filterDateFrom != null &&
-              context.read<OpportunityProvider>().filterDateTo != null
+      initialDateRange: currentDateFrom != null && currentDateTo != null
           ? DateTimeRange(
-              start: context.read<OpportunityProvider>().filterDateFrom!,
-              end: context.read<OpportunityProvider>().filterDateTo!,
+              start: currentDateFrom,
+              end: currentDateTo,
             )
           : null,
       builder: (context, child) {
@@ -342,7 +382,7 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
     );
 
     if (picked != null && mounted) {
-      context.read<OpportunityProvider>().setDateRange(picked.start, picked.end);
+      context.read<OpportunityBloc>().add(OpportunityDateRangeChanged(picked.start, picked.end));
     }
   }
 
