@@ -21,7 +21,7 @@ class OrganizationService implements CreateOrganizationInterface {
   Future<Organization> createOrganization(CreateOrganizationRequest org) async {
     try {
       const String testToken =
-          'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxNTkyMjgyLCJleHAiOjE3NzE2Nzg2ODJ9.s0JhhNLbwH-aQGvBBwG79f-zyY-M1-G9R8t2ixkByfw0xaRNOSL_yKWTFgaYHKT1c3EvrXt31gt2o8Cg7NbqkA';
+          'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxNjEwNDEzLCJleHAiOjE3NzE2OTY4MTN9.C-Oh6vJ87quNQbBPM3GI17vQtf3JFIxdNi4yA0NE5QYqtA1ptBBRdk3purly16yRmtX2CMEOU6hj3w316KR0KQ';
 
       final response = await http.post(
         Uri.parse("$_apiBaseUrl/organizations"),
@@ -50,8 +50,7 @@ class OrganizationService implements CreateOrganizationInterface {
     int size = 5,
   }) async {
     const String testToken =
-        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxNTkyMjgyLCJleHAiOjE3NzE2Nzg2ODJ9.s0JhhNLbwH-aQGvBBwG79f-zyY-M1-G9R8t2ixkByfw0xaRNOSL_yKWTFgaYHKT1c3EvrXt31gt2o8Cg7NbqkA'; // token real
-
+        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxNjEwNDEzLCJleHAiOjE3NzE2OTY4MTN9.C-Oh6vJ87quNQbBPM3GI17vQtf3JFIxdNi4yA0NE5QYqtA1ptBBRdk3purly16yRmtX2CMEOU6hj3w316KR0KQ';
     final uri = Uri.parse('$_apiBaseUrl?page=$page&size=$size');
     final response = await http.get(
       Uri.parse('$_apiBaseUrl/organizations?page=0&size=5'),
@@ -67,11 +66,11 @@ class OrganizationService implements CreateOrganizationInterface {
       throw Exception('Error al obtener organizaciones del manager');
     }
   }
-  
+
   @override
   Future<Organization> deleteOrganization(int id) async {
-
-    const String testToken =  'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxNTkyMjgyLCJleHAiOjE3NzE2Nzg2ODJ9.s0JhhNLbwH-aQGvBBwG79f-zyY-M1-G9R8t2ixkByfw0xaRNOSL_yKWTFgaYHKT1c3EvrXt31gt2o8Cg7NbqkA';
+    const String testToken =
+        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxNjEwNDEzLCJleHAiOjE3NzE2OTY4MTN9.C-Oh6vJ87quNQbBPM3GI17vQtf3JFIxdNi4yA0NE5QYqtA1ptBBRdk3purly16yRmtX2CMEOU6hj3w316KR0KQ';
 
     final response = await http.delete(
       Uri.parse('$_apiBaseUrl/organizations/$id'),
@@ -81,11 +80,10 @@ class OrganizationService implements CreateOrganizationInterface {
       },
     );
 
-  if (response.statusCode >= 200 && response.statusCode < 300) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
       return Organization.fromJson(json.decode(response.body));
     } else {
       throw Exception('Error al borrar la organización');
     }
-    
   }
 }

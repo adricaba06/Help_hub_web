@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:help_hup_mobile/core/models/organization/create_organization_request.dart';
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
 import 'package:help_hup_mobile/features/organization/create_organization_form_page/bloc/create_organization_form_page_bloc.dart';
@@ -26,62 +29,6 @@ class CrearOrganizacionScreen extends StatefulWidget {
   State<CrearOrganizacionScreen> createState() =>
       _CrearOrganizacionScreenState();
 }
-
-const List<String> spanishCities = [
-  "Madrid",
-  "Barcelona",
-  "Valencia",
-  "Sevilla",
-  "Zaragoza",
-  "Málaga",
-  "Murcia",
-  "Palma de Mallorca",
-  "Las Palmas de Gran Canaria",
-  "Bilbao",
-  "Alicante",
-  "Córdoba",
-  "Valladolid",
-  "Vigo",
-  "Gijón",
-  "L'Hospitalet de Llobregat",
-  "La Coruña",
-  "Granada",
-  "Elche",
-  "Oviedo",
-  "Santa Cruz de Tenerife",
-  "Badalona",
-  "Cartagena",
-  "Terrassa",
-  "Jerez de la Frontera",
-  "Sabadell",
-  "Móstoles",
-  "Alcalá de Henares",
-  "Pamplona",
-  "Fuenlabrada",
-  "Almería",
-  "Leganés",
-  "San Sebastián",
-  "Getafe",
-  "Burgos",
-  "Santander",
-  "Albacete",
-  "Castellón de la Plana",
-  "Logroño",
-  "Badajoz",
-  "Salamanca",
-  "Huelva",
-  "Lleida",
-  "Marbella",
-  "Tarragona",
-  "León",
-  "Cádiz",
-  "Ourense",
-  "Girona",
-  "Mérida",
-  "Manresa",
-  "Reus",
-  "Torrevieja",
-];
 
 class _CrearOrganizacionScreenState extends State<CrearOrganizacionScreen> {
   final _nombreController = TextEditingController();
@@ -207,7 +154,7 @@ class _CrearOrganizacionScreenState extends State<CrearOrganizacionScreen> {
 
                           const SizedBox(height: 28),
 
-                          //  Nombre ───────────────────────────────────────────────
+                          //  Nombre ---
                           const _FieldLabel('Nombre de la organización'),
                           const SizedBox(height: 8),
                           _InputField(
@@ -218,72 +165,147 @@ class _CrearOrganizacionScreenState extends State<CrearOrganizacionScreen> {
 
                           const SizedBox(height: 20),
 
-                          // Ciudad ───────────────────────────────────────────────
+                          // Ciudad ------
                           const _FieldLabel('Ciudad'),
                           const SizedBox(height: 8),
 
-                          DropdownButtonFormField<String>(
-                            value: selectedCity,
-                            decoration: InputDecoration(
-                              labelText: 'Ciudad',
-                              labelStyle: const TextStyle(
-                                color: AppColors.grayMid,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              filled: true,
-                              fillColor: AppColors.white,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 14,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: AppColors.grayLight,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: AppColors.grayLight,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: AppColors.primary,
-                                  width: 1.5,
-                                ),
-                              ),
-                              prefixIcon: const Icon(
-                                Icons.location_city,
-                                color: AppColors.grayMid,
-                                size: 20,
-                              ),
-                            ),
-                            dropdownColor: AppColors.white,
-                            icon: const Icon(
-                              Icons.keyboard_arrow_down,
-                              color: AppColors.grayMid,
-                            ),
-                            style: const TextStyle(
-                              color: AppColors.dark,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            items: spanishCities
-                                .map(
-                                  (city) => DropdownMenuItem(
-                                    value: city,
-                                    child: Text(city),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                selectedCity = value;
-                              });
+                          FutureBuilder<List<String>>(
+                            future: cargarProvincias(),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData)
+                                return CircularProgressIndicator();
+
+                              final provincias = snapshot.data!;
+
+                              return Autocomplete<String>(
+                                optionsBuilder:
+                                    (TextEditingValue textEditingValue) {
+                                      if (textEditingValue.text == '') {
+                                        return const Iterable<String>.empty();
+                                      }
+                                      return provincias.where(
+                                        (provincia) =>
+                                            provincia.toLowerCase().contains(
+                                              textEditingValue.text
+                                                  .toLowerCase(),
+                                            ),
+                                      );
+                                    },
+                                fieldViewBuilder: (
+                                  context,
+                                  textEditingController,
+                                  focusNode,
+                                  onFieldSubmitted,
+                                ) {
+                                  return TextField(
+                                    controller: textEditingController,
+                                    focusNode: focusNode,
+                                    onSubmitted: (_) => onFieldSubmitted(),
+                                    style: const TextStyle(
+                                      color: AppColors.dark,
+                                      fontSize: 15,
+                                    ),
+                                    decoration: InputDecoration(
+                                      hintText: 'Ej. Madrid',
+                                      hintStyle: const TextStyle(
+                                        color: AppColors.grayMid,
+                                        fontSize: 15,
+                                      ),
+                                      filled: true,
+                                      fillColor: AppColors.white,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 14,
+                                          ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          12,
+                                        ),
+                                        borderSide: const BorderSide(
+                                          color: AppColors.grayLight,
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          12,
+                                        ),
+                                        borderSide: const BorderSide(
+                                          color: AppColors.grayLight,
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          12,
+                                        ),
+                                        borderSide: const BorderSide(
+                                          color: AppColors.primary,
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                optionsViewBuilder:
+                                    (context, onSelected, options) {
+                                      return Align(
+                                        alignment: Alignment.topLeft,
+                                        child: Material(
+                                          color: AppColors.white,
+                                          elevation: 4,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          child: Container(
+                                            constraints: const BoxConstraints(
+                                              maxHeight: 220,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: AppColors.grayLight,
+                                              ),
+                                            ),
+                                            child: ListView.builder(
+                                              padding: EdgeInsets.zero,
+                                              shrinkWrap: true,
+                                              itemCount: options.length,
+                                              itemBuilder: (context, index) {
+                                                final option = options.elementAt(
+                                                  index,
+                                                );
+                                                return InkWell(
+                                                  onTap: () =>
+                                                      onSelected(option),
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 16,
+                                                          vertical: 12,
+                                                        ),
+                                                    child: Text(
+                                                      option,
+                                                      style: const TextStyle(
+                                                        color: AppColors.dark,
+                                                        fontSize: 15,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                onSelected: (String selection) {
+                                  setState(() {
+                                    selectedCity = selection;
+                                  });
+                                },
+                              );
                             },
                           ),
 
@@ -420,6 +442,14 @@ class _FieldLabel extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<List<String>> cargarProvincias() async {
+  final String jsonString = await rootBundle.loadString(
+    'assets/data/spain.json',
+  );
+  final Map<String, dynamic> jsonData = json.decode(jsonString);
+  return List<String>.from(jsonData['provincias']);
 }
 
 class _InputField extends StatelessWidget {

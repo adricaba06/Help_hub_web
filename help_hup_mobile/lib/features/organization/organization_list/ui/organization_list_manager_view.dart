@@ -14,8 +14,9 @@ class OrganizationListManagerView extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<OrganizationListPageBloc>(
-          create: (_) => OrganizationListPageBloc(OrganizationService())
-            ..add(LoadManagerOrganizations()),
+          create: (_) =>
+              OrganizationListPageBloc(OrganizationService())
+                ..add(LoadManagerOrganizations()),
         ),
         BlocProvider<DeleteOrganizationBloc>(
           create: (_) => DeleteOrganizationBloc(OrganizationService()),
@@ -31,69 +32,89 @@ class _OrganizationListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const _TopHeader(),
-            Expanded(
-              child: BlocBuilder<OrganizationListPageBloc, OrganizationListPageState>(
-                builder: (context, state) {
-                  if (state is OrganizationListPageLoading || state is OrganizationListPageInitial) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+    return BlocListener<DeleteOrganizationBloc, DeleteOrganizationState>(
+      listener: (context, state) {
+        if (state is DeleteOrganizationLoaded) {
+          context.read<OrganizationListPageBloc>().add(
+            RemoveOrganizationFromList(organizationId: state.organizationId),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Organizacion eliminada')),
+          );
+        }
+        if (state is DeleteOrganizationError) {}
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Column(
+            children: [
+              const _TopHeader(),
+              Expanded(
+                child:
+                    BlocBuilder<
+                      OrganizationListPageBloc,
+                      OrganizationListPageState
+                    >(
+                      builder: (context, state) {
+                        if (state is OrganizationListPageLoading ||
+                            state is OrganizationListPageInitial) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
 
-                  if (state is OrganizationListPageError) {
-                    return _ErrorBlock(
-                      error: state.error,
-                      onRetry: () {
-                        context.read<OrganizationListPageBloc>().add(
-                              LoadManagerOrganizations(),
-                            );
-                      },
-                    );
-                  }
+                        if (state is OrganizationListPageError) {
+                          return _ErrorBlock(
+                            error: state.error,
+                            onRetry: () {
+                              context.read<OrganizationListPageBloc>().add(
+                                LoadManagerOrganizations(),
+                              );
+                            },
+                          );
+                        }
 
-                  if (state is OrganizationListPageLoaded) {
-                    final organizations = state.organizations.content;
-                    final uniqueCities = organizations
-                        .map((e) => e.city.trim().toLowerCase())
-                        .toSet()
-                        .length;
+                        if (state is OrganizationListPageLoaded) {
+                          final organizations = state.organizations.content;
+                          final uniqueCities = organizations
+                              .map((e) => e.city.trim().toLowerCase())
+                              .toSet()
+                              .length;
 
-                    return RefreshIndicator(
-                      onRefresh: () async {
-                        context.read<OrganizationListPageBloc>().add(
-                              LoadManagerOrganizations(),
-                            );
-                      },
-                      child: ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.all(16),
-                        children: [
-                          _PanelCard(
-                            totalOrgs: state.organizations.totalElements,
-                            totalCities: uniqueCities,
-                          ),
-                          const SizedBox(height: 16),
-                          if (organizations.isEmpty) const _EmptyBlock(),
-                          ...organizations.map(
-                            (org) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _OrganizationCard(org: org),
+                          return RefreshIndicator(
+                            onRefresh: () async {
+                              context.read<OrganizationListPageBloc>().add(
+                                LoadManagerOrganizations(),
+                              );
+                            },
+                            child: ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(16),
+                              children: [
+                                _PanelCard(
+                                  totalOrgs: state.organizations.totalElements,
+                                  totalCities: uniqueCities,
+                                ),
+                                const SizedBox(height: 16),
+                                if (organizations.isEmpty) const _EmptyBlock(),
+                                ...organizations.map(
+                                  (org) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: _OrganizationCard(org: org),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
               ),
-            ),
-            const _BottomNavMock(),
-          ],
+              const _BottomNavMock(),
+            ],
+          ),
         ),
       ),
     );
@@ -112,9 +133,7 @@ class _TopHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.9),
         border: Border(
-          bottom: BorderSide(
-            color: const Color(0xFF10B77F).withOpacity(0.1),
-          ),
+          bottom: BorderSide(color: const Color(0xFF10B77F).withOpacity(0.1)),
         ),
       ),
       child: Row(
@@ -202,10 +221,7 @@ class _PanelCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Gestionas $totalOrgs organizaciones activas en $totalCities ciudades.',
-            style: const TextStyle(
-              color: Color(0xFF64748B),
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
           ),
         ],
       ),
@@ -226,7 +242,11 @@ class _OrganizationCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFF1F5F9)),
         boxShadow: const [
-          BoxShadow(color: Color(0x0C000000), blurRadius: 2, offset: Offset(0, 1)),
+          BoxShadow(
+            color: Color(0x0C000000),
+            blurRadius: 2,
+            offset: Offset(0, 1),
+          ),
         ],
       ),
       child: Row(
@@ -247,20 +267,54 @@ class _OrganizationCard extends StatelessWidget {
               children: [
                 Text(
                   org.name,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 Text(org.city, style: const TextStyle(color: Colors.grey)),
               ],
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              context.read<DeleteOrganizationBloc>().add(
-                      SubmitDeleteOrganization(organizationId: org.id),
+            onPressed: () async {
+              final shouldDelete = await showDialog<bool>(
+                context: context,
+                builder: (dialogContext) {
+                  return AlertDialog(
+                    title: const Text('Confirmar eliminacion'),
+                    content: Text(
+                      '¿Seguro que quieres eliminar "${org.name}"?',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop(false);
+                        },
+                        child: const Text('Cancelar'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop(true);
+                        },
+                        child: const Text(
+                          'Eliminar',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               );
+
+              if (shouldDelete == true) {
+                context.read<DeleteOrganizationBloc>().add(
+                  SubmitDeleteOrganization(organizationId: org.id),
+                );
+              }
             },
             child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
-          )
+          ),
         ],
       ),
     );
@@ -281,7 +335,11 @@ class _BottomNavMock extends StatelessWidget {
       child: const Row(
         children: [
           _NavItem(label: 'Explorar', icon: Icons.explore_outlined),
-          _NavItem(label: 'Solicitudes', icon: Icons.description_outlined, selected: true),
+          _NavItem(
+            label: 'Solicitudes',
+            icon: Icons.description_outlined,
+            selected: true,
+          ),
           _NavItem(label: 'Favoritos', icon: Icons.favorite_border),
           _NavItem(label: 'Perfil', icon: Icons.person_outline),
         ],
@@ -295,7 +353,11 @@ class _NavItem extends StatelessWidget {
   final IconData icon;
   final bool selected;
 
-  const _NavItem({required this.label, required this.icon, this.selected = false});
+  const _NavItem({
+    required this.label,
+    required this.icon,
+    this.selected = false,
+  });
 
   @override
   Widget build(BuildContext context) {

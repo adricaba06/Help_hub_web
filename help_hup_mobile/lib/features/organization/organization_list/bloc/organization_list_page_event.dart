@@ -9,3 +9,9 @@ class LoadManagerOrganizations extends OrganizationListPageEvent {
 
   LoadManagerOrganizations({this.page = 0, this.size = 5});
 }
+
+class RemoveOrganizationFromList extends OrganizationListPageEvent {
+  final int organizationId;
+
+  RemoveOrganizationFromList({required this.organizationId});
+}

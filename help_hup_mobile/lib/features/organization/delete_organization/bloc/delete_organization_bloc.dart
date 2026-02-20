@@ -6,21 +6,30 @@ import 'package:meta/meta.dart';
 part 'delete_organization_event.dart';
 part 'delete_organization_state.dart';
 
-class DeleteOrganizationBloc extends Bloc<DeleteOrganizationEvent, DeleteOrganizationState> {
+class DeleteOrganizationBloc
+    extends Bloc<DeleteOrganizationEvent, DeleteOrganizationState> {
   final OrganizationService organizationService;
-  
-  DeleteOrganizationBloc(this.organizationService) : super(DeleteOrganizationInitial()) {
-    on<DeleteOrganizationEvent>(_onSubmitDeleteOrganization as EventHandler<DeleteOrganizationEvent, DeleteOrganizationState>);
+
+  DeleteOrganizationBloc(this.organizationService)
+    : super(DeleteOrganizationInitial()) {
+    on<SubmitDeleteOrganization>(_onSubmitDeleteOrganization);
   }
 
   Future<void> _onSubmitDeleteOrganization(
     SubmitDeleteOrganization event,
     Emitter<DeleteOrganizationState> emit,
-  ) async{
+  ) async {
     emit(DeleteOrganizationLoading());
     try {
-      final organ = await organizationService.deleteOrganization(event.organizationId);
-      emit(DeleteOrganizationLoaded(organizationId: event.organizationId, organization: organ));
+      final organ = await organizationService.deleteOrganization(
+        event.organizationId,
+      );
+      emit(
+        DeleteOrganizationLoaded(
+          organizationId: event.organizationId,
+          organization: organ,
+        ),
+      );
     } catch (e) {
       emit(DeleteOrganizationError());
     }

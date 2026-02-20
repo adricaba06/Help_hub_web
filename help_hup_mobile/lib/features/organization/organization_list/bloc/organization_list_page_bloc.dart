@@ -13,6 +13,7 @@ class OrganizationListPageBloc
   OrganizationListPageBloc(this.organizationService)
     : super(OrganizationListPageInitial()) {
     on<LoadManagerOrganizations>(_onLoadManagerOrganizations);
+    on<RemoveOrganizationFromList>(_onRemoveOrganizationFromList);
   }
 
   Future<void> _onLoadManagerOrganizations(
@@ -29,5 +30,27 @@ class OrganizationListPageBloc
     } catch (e) {
       emit(OrganizationListPageError(error: e.toString()));
     }
+  }
+
+  void _onRemoveOrganizationFromList(
+    RemoveOrganizationFromList event,
+    Emitter<OrganizationListPageState> emit,
+  ) {
+    final currentState = state;
+    if (currentState is! OrganizationListPageLoaded) return;
+
+    final updatedContent = currentState.organizations.content
+        .where((organization) => organization.id != event.organizationId)
+        .toList();
+
+    emit(
+      OrganizationListPageLoaded(
+        organizations: OrganizationListResponse(
+          content: updatedContent,
+          totalElements: updatedContent.length,
+          totalPages: currentState.organizations.totalPages,
+        ),
+      ),
+    );
   }
 }
