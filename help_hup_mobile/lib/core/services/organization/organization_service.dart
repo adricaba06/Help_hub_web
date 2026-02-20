@@ -21,7 +21,7 @@ class OrganizationService implements CreateOrganizationInterface {
   Future<Organization> createOrganization(CreateOrganizationRequest org) async {
     try {
       const String testToken =
-          'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxNTQ1MTA0LCJleHAiOjE3NzE2MzE1MDR9.qXM_q1pZl6yQetDWRcDb2ACqDXlXNELmdxvSfYqu5IoI9GxvZcVUl2ZsCByw2AP2-CktkDwhmkpIZd9tj27iRw';
+          'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxNTkyMjgyLCJleHAiOjE3NzE2Nzg2ODJ9.s0JhhNLbwH-aQGvBBwG79f-zyY-M1-G9R8t2ixkByfw0xaRNOSL_yKWTFgaYHKT1c3EvrXt31gt2o8Cg7NbqkA';
 
       final response = await http.post(
         Uri.parse("$_apiBaseUrl/organizations"),
@@ -50,7 +50,7 @@ class OrganizationService implements CreateOrganizationInterface {
     int size = 5,
   }) async {
     const String testToken =
-        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxNTQ1MTA0LCJleHAiOjE3NzE2MzE1MDR9.qXM_q1pZl6yQetDWRcDb2ACqDXlXNELmdxvSfYqu5IoI9GxvZcVUl2ZsCByw2AP2-CktkDwhmkpIZd9tj27iRw'; // token real
+        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxNTkyMjgyLCJleHAiOjE3NzE2Nzg2ODJ9.s0JhhNLbwH-aQGvBBwG79f-zyY-M1-G9R8t2ixkByfw0xaRNOSL_yKWTFgaYHKT1c3EvrXt31gt2o8Cg7NbqkA'; // token real
 
     final uri = Uri.parse('$_apiBaseUrl?page=$page&size=$size');
     final response = await http.get(
@@ -71,11 +71,10 @@ class OrganizationService implements CreateOrganizationInterface {
   @override
   Future<Organization> deleteOrganization(int id) async {
 
-    const String testToken =  'eyJ0eXAiOiJK';
+    const String testToken =  'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxNTkyMjgyLCJleHAiOjE3NzE2Nzg2ODJ9.s0JhhNLbwH-aQGvBBwG79f-zyY-M1-G9R8t2ixkByfw0xaRNOSL_yKWTFgaYHKT1c3EvrXt31gt2o8Cg7NbqkA';
 
-    final uri = Uri.parse('$_apiBaseUrl/organizations/$id');
     final response = await http.delete(
-      Uri.parse('$_apiBaseUrl/organizations'),
+      Uri.parse('$_apiBaseUrl/organizations/$id'),
       headers: {
         'Authorization': 'Bearer $testToken',
         'Content-Type': 'application/json',

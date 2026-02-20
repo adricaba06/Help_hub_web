@@ -253,7 +253,7 @@ class _OrganizationCard extends StatelessWidget {
               ],
             ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               context.read<DeleteOrganizationBloc>().add(
                       SubmitDeleteOrganization(organizationId: org.id),

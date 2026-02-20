@@ -10,7 +10,7 @@ final class DeleteOrganizationLoading extends DeleteOrganizationState {}
 final class DeleteOrganizationLoaded extends DeleteOrganizationState {
   final Organization organization;
 
-  DeleteOrganizationLoaded({required this.organization});
+  DeleteOrganizationLoaded({required this.organization, required int organizationId});
 }
 final class DeleteOrganizationError extends DeleteOrganizationState {}
 

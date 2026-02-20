@@ -1,104 +1,123 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'features/auth/provider/auth_provider.dart';
-import 'features/auth/ui/login_screen.dart';
-import 'features/auth/ui/token_display_screen.dart';
+import 'package:help_hup_mobile/features/organization/create_organization_form_page/ui/create_organization_form_page_view.dart';
+import 'package:help_hup_mobile/features/organization/organization_list/ui/organization_list_manager_view.dart';
 
-void main() async {
-  // Ensure Flutter engine is initialized before any plugin calls
-  WidgetsFlutterBinding.ensureInitialized();
-  // Pre-warm SharedPreferences so the first frame has no async wait
-  await SharedPreferences.getInstance();
-  runApp(const HelpHubApp());
+void main() {
+  runApp(const MyApp());
 }
 
-class HelpHubApp extends StatelessWidget {
-  const HelpHubApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
-      child: MaterialApp(
-        title: 'HelpHub',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF10B77F),
-            primary: const Color(0xFF10B77F),
-          ),
-          useMaterial3: true,
-          fontFamily: 'Inter',
-        ),
-        home: const _AuthWrapper(),
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        // This is the theme of your application.
+        //
+        // TRY THIS: Try running your application with "flutter run". You'll see
+        // the application has a purple toolbar. Then, without quitting the app,
+        // try changing the seedColor in the colorScheme below to Colors.green
+        // and then invoke "hot reload" (save your changes or press the "hot
+        // reload" button in a Flutter-supported IDE, or press "r" if you used
+        // the command line to start the app).
+        //
+        // Notice that the counter didn't reset back to zero; the application
+        // state is not lost during the reload. To reset the state, use hot
+        // restart instead.
+        //
+        // This works for code too, not just values: Most code changes can be
+        // tested with just a hot reload.
+        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
+      home: OrganizationListManagerView(),
     );
   }
 }
 
-class _AuthWrapper extends StatelessWidget {
-  const _AuthWrapper();
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
+
+  // This widget is the home page of your application. It is stateful, meaning
+  // that it has a State object (defined below) that contains fields that affect
+  // how it looks.
+
+  // This class is the configuration for the state. It holds the values (in this
+  // case the title) provided by the parent (in this case the App widget) and
+  // used by the build method of the State. Fields in a Widget subclass are
+  // always marked "final".
+
+  final String title;
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, _) {
-        switch (auth.status) {
-          case AuthStatus.initial:
-            return const _SplashScreen();
-          case AuthStatus.authenticated:
-            return const TokenDisplayScreen();
-          default:
-            return const LoginScreen();
-        }
-      },
-    );
-  }
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _SplashScreen extends StatelessWidget {
-  const _SplashScreen();
+class _MyHomePageState extends State<MyHomePage> {
+  int _counter = 0;
+
+  void _incrementCounter() {
+    setState(() {
+      // This call to setState tells the Flutter framework that something has
+      // changed in this State, which causes it to rerun the build method below
+      // so that the display can reflect the updated values. If we changed
+      // _counter without calling setState(), then the build method would not be
+      // called again, and so nothing would appear to happen.
+      _counter++;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFFF6F8F7),
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
+    //
+    // The Flutter framework has been optimized to make rerunning build methods
+    // fast, so that you can just rebuild anything that needs updating rather
+    // than having to individually change instances of widgets.
+    return Scaffold(
+      appBar: AppBar(
+        // TRY THIS: Try changing the color here to a specific color (to
+        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+        // change color while the other colors stay the same.
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: Text(widget.title),
+      ),
       body: Center(
+        // Center is a layout widget. It takes a single child and positions it
+        // in the middle of the parent.
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          // Column is also a layout widget. It takes a list of children and
+          // arranges them vertically. By default, it sizes itself to fit its
+          // children horizontally, and tries to be as tall as its parent.
+          //
+          // Column has various properties to control how it sizes itself and
+          // how it positions its children. Here we use mainAxisAlignment to
+          // center the children vertically; the main axis here is the vertical
+          // axis because Columns are vertical (the cross axis would be
+          // horizontal).
+          //
+          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
+          // action in the IDE, or press "p" in the console), to see the
+          // wireframe for each widget.
+          mainAxisAlignment: .center,
           children: [
-            CircleAvatar(
-              radius: 44,
-              backgroundColor: Color(0xFF10B77F),
-              child: Icon(Icons.volunteer_activism, color: Colors.white, size: 48),
-            ),
-            SizedBox(height: 20),
+            const Text('You have pushed the button this many times:'),
             Text(
-              'HelpHub',
-              style: TextStyle(
-                color: Color(0xFF18181B),
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.5,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Tu ayuda importa',
-              style: TextStyle(color: Color(0xFF52525B), fontSize: 15),
-            ),
-            SizedBox(height: 40),
-            SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(
-                color: Color(0xFF10B77F),
-                strokeWidth: 2.5,
-              ),
+              '$_counter',
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _incrementCounter,
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
       ),
     );
   }

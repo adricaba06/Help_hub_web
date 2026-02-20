@@ -20,7 +20,7 @@ class DeleteOrganizationBloc extends Bloc<DeleteOrganizationEvent, DeleteOrganiz
     emit(DeleteOrganizationLoading());
     try {
       final organ = await organizationService.deleteOrganization(event.organizationId);
-      emit(DeleteOrganizationLoaded(organization: organ));
+      emit(DeleteOrganizationLoaded(organizationId: event.organizationId, organization: organ));
     } catch (e) {
       emit(DeleteOrganizationError());
     }
