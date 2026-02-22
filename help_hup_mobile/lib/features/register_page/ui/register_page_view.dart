@@ -74,7 +74,8 @@ class _RegisterPageViewState extends State<RegisterPageView> {
         if (state is RegisterPageSuccess) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar( SnackBar(content: Text('Registro exitoso')));
+          ).showSnackBar(const SnackBar(content: Text('Registro exitoso')));
+          Navigator.of(context).pop(true);
         }
       },
       child: Scaffold(

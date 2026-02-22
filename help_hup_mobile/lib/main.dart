@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'features/auth/provider/auth_provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'core/config/bloc_observer.dart';
+import 'core/services/auth_service.dart';
+import 'core/services/opportunity_service.dart';
+import 'core/services/storage_service.dart';
+import 'features/auth/bloc/auth_bloc.dart';
 import 'features/auth/ui/login_screen.dart';
-import 'features/auth/ui/token_display_screen.dart';
+import 'features/opportunities/bloc/opportunity_bloc.dart';
+import 'features/opportunities/ui/opportunities_list_screen.dart';
 
 void main() async {
   // Ensure Flutter engine is initialized before any plugin calls
   WidgetsFlutterBinding.ensureInitialized();
   // Pre-warm SharedPreferences so the first frame has no async wait
   await SharedPreferences.getInstance();
+  // Initialize date formatting for Spanish locale
+  await initializeDateFormatting('es', null);
+  // Configure BLoC observer for global logging
+  Bloc.observer = AppBlocObserver();
   runApp(const HelpHubApp());
 }
 
@@ -18,8 +28,11 @@ class HelpHubApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => AuthBloc(AuthService(), StorageService())),
+        BlocProvider(create: (_) => OpportunityBloc(OpportunityService())),
+      ],
       child: MaterialApp(
         title: 'HelpHub',
         debugShowCheckedModeBanner: false,
@@ -42,16 +55,17 @@ class _AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, _) {
-        switch (auth.status) {
-          case AuthStatus.initial:
-            return const _SplashScreen();
-          case AuthStatus.authenticated:
-            return const TokenDisplayScreen();
-          default:
-            return const LoginScreen();
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        if (state is AuthInitial || state is AuthLoading) {
+          return const _SplashScreen();
         }
+        
+        if (state is AuthAuthenticated) {
+          return const OpportunitiesListScreen();
+        }
+        
+        return const LoginScreen();
       },
     );
   }

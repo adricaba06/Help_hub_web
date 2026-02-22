@@ -1,31 +1,11 @@
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
 class Userservice {
-  Userservice({http.Client? client, String? baseUrl})
-      : _client = client ?? http.Client(),
-        baseUrl = baseUrl ?? _resolveBaseUrl();
+  Userservice({http.Client? client}) : _client = client ?? http.Client();
 
   final http.Client _client;
-  final String baseUrl;
-
-  static String _resolveBaseUrl() {
-    if (kIsWeb) {
-      return 'http://localhost:8080';
-    }
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-      //Las x las hay que cambiar cuando llegue a clase por la ip del ordenador
-        return 'http://XXXXXXXXXXXXXXXX:8080';
-      case TargetPlatform.iOS:
-      case TargetPlatform.macOS:
-      case TargetPlatform.windows:
-      case TargetPlatform.linux:
-      case TargetPlatform.fuchsia:
-        return 'http://localhost:8080';
-    }
-  }
+  static const String baseUrl = 'http://10.0.2.2:8080';
 
   Future<Map<String, dynamic>> register({
     required String email,

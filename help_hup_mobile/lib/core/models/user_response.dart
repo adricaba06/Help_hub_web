@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class UserResponse {
   final int id;
   final String email;
@@ -26,9 +24,4 @@ class UserResponse {
         'displayName': displayName,
         'role': role,
       };
-
-  static UserResponse fromRawJson(String str) =>
-      UserResponse.fromJson(json.decode(str));
-
-  String toRawJson() => json.encode(toJson());
 }
