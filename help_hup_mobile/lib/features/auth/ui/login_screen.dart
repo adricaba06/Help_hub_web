@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:help_hup_mobile/features/organization/organization_list/ui/organization_list_manager_view.dart';
-import '../provider/auth_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/auth_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,17 +38,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final authProvider = context.read<AuthProvider>();
-    await authProvider.login(_emailCtrl.text.trim(), _passCtrl.text);
-
-    if (!mounted) return;
-    if (authProvider.status == AuthStatus.authenticated) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => const OrganizationListManagerView(),
-        ),
-      );
-    }
+    context.read<AuthBloc>().add(
+      AuthLoginRequested(
+        email: _emailCtrl.text.trim(),
+        password: _passCtrl.text,
+      ),
+    );
   }
 
   void _fillTestAccount(String email, String password) {
@@ -61,12 +55,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final isLoading = auth.status == AuthStatus.loading;
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF6F8F7),
-      body: Stack(
+        return Scaffold(
+          backgroundColor: const Color(0xFFF6F8F7),
+          body: Stack(
         children: [
           // Decorative background circles
           Positioned(
@@ -140,7 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           _buildHeader(),
                           _buildHeroSection(),
-                          _buildFormSection(isLoading, auth),
+                          _buildFormSection(isLoading, state),
                           _buildTestAccountsSection(isLoading),
                           _buildFooter(),
                         ],
@@ -153,6 +148,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
+    );
+      },
     );
   }
 
@@ -300,7 +297,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // ── Form ────────────────────────────────────────────────────────────────────
-  Widget _buildFormSection(bool isLoading, AuthProvider auth) {
+  Widget _buildFormSection(bool isLoading, AuthState state) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
       child: Column(
@@ -386,7 +383,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 16),
           // Error banner
-          if (auth.status == AuthStatus.error && auth.errorMessage != null) ...[
+          if (state is AuthError) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
@@ -400,7 +397,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      auth.errorMessage!,
+                      state.message,
                       style: const TextStyle(
                         color: Color(0xFFDC2626),
                         fontSize: 13,
@@ -409,7 +406,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: auth.clearError,
+                    onTap: () => context.read<AuthBloc>().add(AuthErrorCleared()),
                     child: const Icon(Icons.close, color: Color(0xFFDC2626), size: 18),
                   ),
                 ],
