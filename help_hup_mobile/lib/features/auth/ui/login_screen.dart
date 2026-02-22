@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:help_hup_mobile/features/organization/organization_list/ui/organization_list_manager_view.dart';
 import '../provider/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -38,9 +39,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    await context
-        .read<AuthProvider>()
-        .login(_emailCtrl.text.trim(), _passCtrl.text);
+    final authProvider = context.read<AuthProvider>();
+    await authProvider.login(_emailCtrl.text.trim(), _passCtrl.text);
+
+    if (!mounted) return;
+    if (authProvider.status == AuthStatus.authenticated) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => const OrganizationListManagerView(),
+        ),
+      );
+    }
   }
 
   void _fillTestAccount(String email, String password) {

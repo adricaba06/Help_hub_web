@@ -8,6 +8,8 @@ abstract class CreateOrganizationInterface {
   Future<OrganizationListResponse> getManagersOrganizations({int page =0, int size =5});
 
   Future<Organization> deleteOrganization(int id);
+
+  Future<Organization> getOrganizationById(int id);
 }
 
 

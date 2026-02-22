@@ -5,6 +5,7 @@ import 'package:help_hup_mobile/core/services/organization/organization_service.
 import 'package:help_hup_mobile/features/organization/create_organization_form_page/ui/create_organization_form_page_view.dart';
 import 'package:help_hup_mobile/features/organization/delete_organization/bloc/delete_organization_bloc.dart';
 import 'package:help_hup_mobile/features/organization/organization_list/bloc/organization_list_page_bloc.dart';
+import 'package:help_hup_mobile/features/organization/view_organization_detail/ui/view_organization_detail_view.dart';
 
 class OrganizationListManagerView extends StatelessWidget {
   const OrganizationListManagerView({super.key});
@@ -121,8 +122,6 @@ class _OrganizationListScreen extends StatelessWidget {
   }
 }
 
-// --- Componentes de la UI ---
-
 class _TopHeader extends StatelessWidget {
   const _TopHeader();
 
@@ -131,9 +130,11 @@ class _TopHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         border: Border(
-          bottom: BorderSide(color: const Color(0xFF10B77F).withOpacity(0.1)),
+          bottom: BorderSide(
+            color: const Color(0xFF10B77F).withValues(alpha: 0.1),
+          ),
         ),
       ),
       child: Row(
@@ -231,91 +232,120 @@ class _PanelCard extends StatelessWidget {
 
 class _OrganizationCard extends StatelessWidget {
   final Organization org;
+
   const _OrganizationCard({required this.org});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0C000000),
-            blurRadius: 2,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.business, color: Color(0xFF334155)),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  org.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                Text(org.city, style: const TextStyle(color: Colors.grey)),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final shouldDelete = await showDialog<bool>(
-                context: context,
-                builder: (dialogContext) {
-                  return AlertDialog(
-                    title: const Text('Confirmar eliminacion'),
-                    content: Text(
-                      '¿Seguro que quieres eliminar "${org.name}"?',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(dialogContext).pop(false);
-                        },
-                        child: const Text('Cancelar'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(dialogContext).pop(true);
-                        },
-                        child: const Text(
-                          'Eliminar',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              );
+    final logoUrl = OrganizationService().buildImageUrl(org.logoFieldId);
 
-              if (shouldDelete == true) {
-                context.read<DeleteOrganizationBloc>().add(
-                  SubmitDeleteOrganization(organizationId: org.id),
-                );
-              }
-            },
-            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ViewOrganizationDetailView(organizationId: org.id),
           ),
-        ],
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFF1F5F9)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0C000000),
+              blurRadius: 2,
+              offset: Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: logoUrl == null
+                  ? const Icon(Icons.business, color: Color(0xFF334155))
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        logoUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.business,
+                            color: Color(0xFF334155),
+                          );
+                        },
+                      ),
+                    ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    org.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(org.city, style: const TextStyle(color: Colors.grey)),
+                ],
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final deleteBloc = context.read<DeleteOrganizationBloc>();
+                final shouldDelete = await showDialog<bool>(
+                  context: context,
+                  builder: (dialogContext) {
+                    return AlertDialog(
+                      title: const Text('Confirmar eliminacion'),
+                      content: Text(
+                        '¿Seguro que quieres eliminar "${org.name}"?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop(false);
+                          },
+                          child: const Text('Cancelar'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop(true);
+                          },
+                          child: const Text(
+                            'Eliminar',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                if (shouldDelete == true) {
+                  deleteBloc.add(
+                    SubmitDeleteOrganization(organizationId: org.id),
+                  );
+                }
+              },
+              child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -386,6 +416,7 @@ class _EmptyBlock extends StatelessWidget {
 class _ErrorBlock extends StatelessWidget {
   final String error;
   final VoidCallback onRetry;
+
   const _ErrorBlock({required this.error, required this.onRetry});
 
   @override
