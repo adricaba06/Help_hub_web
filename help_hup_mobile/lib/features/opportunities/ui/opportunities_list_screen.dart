@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/widgets/app_bottom_nav_bar.dart';
+import '../../../widgets/app_bottom_nav_bar.dart';
 import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/ui/login_screen.dart';
+import '../../profile/ui/profile_screen.dart';
 import '../bloc/opportunity_bloc.dart';
 import '../widgets/opportunity_card.dart';
 
@@ -79,12 +81,49 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                       letterSpacing: -0.5,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.logout_outlined, color: Color(0xFF52525B)),
-                    onPressed: () {
-                      context.read<AuthBloc>().add(AuthLogoutRequested());
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, authState) {
+                      if (authState is AuthAuthenticated) {
+                        return const SizedBox(width: 40);
+                      }
+
+                      return TextButton.icon(
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF10B77F),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                          );
+                        },
+                        icon: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            const Icon(Icons.login, size: 18),
+                            Positioned(
+                              right: -2,
+                              top: -1,
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFD92D20),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        label: const Text(
+                          'Iniciar sesión',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      );
                     },
-                    tooltip: 'Cerrar sesión',
                   ),
                 ],
               ),
@@ -289,7 +328,14 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 0,
         onTap: (index) {
-          // Footer estático - sin navegación
+          if (index == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ProfileScreen(),
+              ),
+            );
+          }
         },
       ),
     );

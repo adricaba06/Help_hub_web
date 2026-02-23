@@ -2,11 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/opportunity_response.dart';
-import 'storage_service.dart';
 
 class OpportunityService {
-  final StorageService _storage = StorageService();
-
   Future<List<OpportunityResponse>> searchOpportunities({
     String? query,
     String? city,
@@ -14,8 +11,6 @@ class OpportunityService {
     DateTime? dateTo,
   }) async {
     try {
-      final token = await _storage.getToken();
-      
       // Construir queryParameters dinámicamente
       final Map<String, String> queryParams = {};
       
@@ -43,7 +38,6 @@ class OpportunityService {
         uri,
         headers: {
           'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
         },
       );
 
