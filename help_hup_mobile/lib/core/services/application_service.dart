@@ -26,9 +26,7 @@ class ApplicationService {
     required String token,
     required String motivationText,
   }) async {
-    final url = Uri.parse(
-      '${AppConfig.baseUrl}/api/opportunities/$opportunityId/apply',
-    );
+    final url = Uri.parse(AppConfig.applyToOpportunityUrl(opportunityId));
 
     final res = await http.post(
       url,
@@ -54,9 +52,7 @@ class ApplicationService {
     required int applicationId,
     required String token,
   }) async {
-    final url = Uri.parse(
-      '${AppConfig.baseUrl}/api/applications/$applicationId',
-    );
+    final url = Uri.parse(AppConfig.deleteApplicationUrl(applicationId));
 
     final res = await http.delete(
       url,
