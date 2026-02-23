@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
+import 'package:help_hup_mobile/core/services/storage_service.dart';
 import 'package:help_hup_mobile/features/organization/view_organization_detail/bloc/view_organization_detail_bloc.dart';
 
 class ViewOrganizationDetailView extends StatelessWidget {
@@ -104,22 +105,16 @@ class _ViewOrganizationDetailScreen extends StatelessWidget {
                                               'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=60',
                                               fit: BoxFit.cover,
                                             )
-                                          : Image.network(
-                                              coverUrl,
+                                          : _AuthorizedNetworkImage(
+                                              url: coverUrl,
                                               fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (context, error, stackTrace) {
-                                                    return Container(
-                                                      color: const Color(
-                                                        0xFFE2E8F0,
-                                                      ),
-                                                      alignment:
-                                                          Alignment.center,
-                                                      child: const Icon(
-                                                        Icons.image_not_supported_outlined,
-                                                      ),
-                                                    );
-                                                  },
+                                              placeholder: Container(
+                                                color: const Color(0xFFE2E8F0),
+                                                alignment: Alignment.center,
+                                                child: const Icon(
+                                                  Icons.image_not_supported_outlined,
+                                                ),
+                                              ),
                                             ),
                                       Container(
                                         decoration: BoxDecoration(
@@ -164,25 +159,17 @@ class _ViewOrganizationDetailScreen extends StatelessWidget {
                                                 color: Color(0xFF334155),
                                               ),
                                             )
-                                          : Image.network(
-                                              logoUrl,
+                                          : _AuthorizedNetworkImage(
+                                              url: logoUrl,
                                               fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (context, error, stackTrace) {
-                                                    return Container(
-                                                      color: const Color(
-                                                        0xFFF1F5F9,
-                                                      ),
-                                                      alignment:
-                                                          Alignment.center,
-                                                      child: const Icon(
-                                                        Icons.business,
-                                                        color: Color(
-                                                          0xFF334155,
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
+                                              placeholder: Container(
+                                                color: const Color(0xFFF1F5F9),
+                                                alignment: Alignment.center,
+                                                child: const Icon(
+                                                  Icons.business,
+                                                  color: Color(0xFF334155),
+                                                ),
+                                              ),
                                             ),
                                     ),
                                   ),
@@ -577,6 +564,48 @@ class _BottomItem extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AuthorizedNetworkImage extends StatelessWidget {
+  final String url;
+  final BoxFit fit;
+  final Widget placeholder;
+
+  const _AuthorizedNetworkImage({
+    required this.url,
+    required this.fit,
+    required this.placeholder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String?>(
+      future: StorageService().getToken(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(
+            child: SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        }
+
+        final token = snapshot.data;
+        if (token == null || token.isEmpty) {
+          return placeholder;
+        }
+
+        return Image.network(
+          url,
+          fit: fit,
+          headers: <String, String>{'Authorization': 'Bearer $token'},
+          errorBuilder: (context, error, stackTrace) => placeholder,
+        );
+      },
     );
   }
 }

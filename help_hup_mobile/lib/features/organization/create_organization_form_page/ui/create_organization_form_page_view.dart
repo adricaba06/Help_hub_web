@@ -75,6 +75,18 @@ class _CrearOrganizacionScreenState extends State<CrearOrganizacionScreen> {
       );
       return;
     }
+    if (_descripcionController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(blocContext).showSnackBar(
+        const SnackBar(content: Text('Completa la descripcion')),
+      );
+      return;
+    }
+    if (_logoImage == null || _coverImage == null) {
+      ScaffoldMessenger.of(blocContext).showSnackBar(
+        const SnackBar(content: Text('Sube logo y portada obligatoriamente')),
+      );
+      return;
+    }
 
     final bloc = blocContext.read<CreateOrganizationFormPageBloc>();
     String? logoFieldId;
@@ -85,19 +97,15 @@ class _CrearOrganizacionScreenState extends State<CrearOrganizacionScreen> {
     });
 
     try {
-      if (_logoImage != null) {
-        logoFieldId = await bloc.organizationService.uploadImageFile(_logoImage!.path);
-      }
-      if (_coverImage != null) {
-        coverFieldId = await bloc.organizationService.uploadImageFile(_coverImage!.path);
-      }
+      logoFieldId = await bloc.organizationService.uploadImageFile(_logoImage!.path);
+      coverFieldId = await bloc.organizationService.uploadImageFile(_coverImage!.path);
 
       final request = CreateOrganizationRequest(
         name: _nombreController.text.trim(),
         city: selectedCity!,
-        description: _descripcionController.text.trim(),
         logoFieldId: logoFieldId,
         coverFieldId: coverFieldId,
+        description: _descripcionController.text.trim(),
       );
 
       bloc.add(SubmitCreateOrganization(organizationRequest: request));

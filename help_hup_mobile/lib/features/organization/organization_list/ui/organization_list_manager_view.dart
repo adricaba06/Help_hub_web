@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:help_hup_mobile/core/models/organization/organization_response.dart';
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
+import 'package:help_hup_mobile/core/services/storage_service.dart';
 import 'package:help_hup_mobile/features/organization/create_organization_form_page/ui/create_organization_form_page_view.dart';
 import 'package:help_hup_mobile/features/organization/delete_organization/bloc/delete_organization_bloc.dart';
 import 'package:help_hup_mobile/features/organization/organization_list/bloc/organization_list_page_bloc.dart';
@@ -238,6 +239,8 @@ class _OrganizationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logoUrl = OrganizationService().buildImageUrl(org.logoFieldId);
+    final coverUrl = OrganizationService().buildImageUrl(org.coverFieldId);
+    final imageUrl = logoUrl ?? coverUrl;
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
@@ -272,21 +275,7 @@ class _OrganizationCard extends StatelessWidget {
                 color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: logoUrl == null
-                  ? const Icon(Icons.business, color: Color(0xFF334155))
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        logoUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.business,
-                            color: Color(0xFF334155),
-                          );
-                        },
-                      ),
-                    ),
+              child: _OrganizationImage(imageUrl: imageUrl),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -313,7 +302,7 @@ class _OrganizationCard extends StatelessWidget {
                     return AlertDialog(
                       title: const Text('Confirmar eliminacion'),
                       content: Text(
-                        '¿Seguro que quieres eliminar "${org.name}"?',
+                        'Seguro que quieres eliminar "${org.name}"?',
                       ),
                       actions: [
                         TextButton(
@@ -350,7 +339,6 @@ class _OrganizationCard extends StatelessWidget {
     );
   }
 }
-
 class _BottomNavMock extends StatelessWidget {
   const _BottomNavMock();
 
@@ -374,6 +362,64 @@ class _BottomNavMock extends StatelessWidget {
           _NavItem(label: 'Perfil', icon: Icons.person_outline),
         ],
       ),
+    );
+  }
+}
+
+class _OrganizationImage extends StatelessWidget {
+  final String? imageUrl;
+
+  const _OrganizationImage({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    if (imageUrl == null) {
+      return const Icon(Icons.image_outlined, color: Color(0xFF64748B));
+    }
+
+    return FutureBuilder<String?>(
+      future: StorageService().getToken(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(
+            child: SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        }
+
+        final token = snapshot.data;
+        if (token == null || token.isEmpty) {
+          return const Icon(Icons.image_outlined, color: Color(0xFF64748B));
+        }
+
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.network(
+            imageUrl!,
+            fit: BoxFit.cover,
+            headers: <String, String>{'Authorization': 'Bearer $token'},
+            loadingBuilder: (context, child, progress) {
+              if (progress == null) return child;
+              return const Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(
+                Icons.image_outlined,
+                color: Color(0xFF64748B),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
