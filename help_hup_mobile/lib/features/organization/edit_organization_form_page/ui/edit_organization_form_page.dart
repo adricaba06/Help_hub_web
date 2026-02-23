@@ -1,235 +1,495 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-class EditOrganizationScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+
+class EditOrganizationScreen extends StatefulWidget {
   const EditOrganizationScreen({super.key});
+
+  @override
+  State<EditOrganizationScreen> createState() => _EditOrganizationScreenState();
+}
+
+class _EditOrganizationScreenState extends State<EditOrganizationScreen> {
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _cityController = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
+
+  String? _selectedCity;
+  Uint8List? _logoPreview;
+  Uint8List? _coverPreview;
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _cityController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickLogo() async {
+    final picked = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+
+    final bytes = await picked.readAsBytes();
+    if (!mounted) return;
+
+    setState(() {
+      _logoPreview = bytes;
+    });
+  }
+
+  Future<void> _pickCover() async {
+    final picked = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+
+    final bytes = await picked.readAsBytes();
+    if (!mounted) return;
+
+    setState(() {
+      _coverPreview = bytes;
+    });
+  }
+
+  Future<void> _saveChanges() async {
+    if (_nameController.text.trim().isEmpty) {
+      _showMessage('Completa el nombre de la organizacion');
+      return;
+    }
+    if ((_selectedCity ?? _cityController.text).trim().isEmpty) {
+      _showMessage('Selecciona una ciudad');
+      return;
+    }
+    if (_descriptionController.text.trim().isEmpty) {
+      _showMessage('Completa la descripcion');
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+
+    setState(() {
+      _isSaving = false;
+    });
+
+    _showMessage('Cambios guardados (pendiente integrar endpoint de edicion)');
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 18, 32, 47),
+      backgroundColor: _EditColors.white,
+      appBar: AppBar(
+        backgroundColor: _EditColors.white,
+        elevation: 0,
+        centerTitle: true,
+        leading: const BackButton(color: _EditColors.dark),
+        title: const Text(
+          'Editar Organizacion',
+          style: TextStyle(
+            color: _EditColors.dark,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
       body: SafeArea(
-        child: Column(
-          children: [
-            _TopBar(),
-            Expanded(child: _Content()),
-            _SaveButton(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TopBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
-        border: const Border(
-          bottom: BorderSide(color: Color(0xFFF1F5F9)),
-        ),
-      ),
-      child: const Text(
-        "Editar Organización",
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF0F172A),
-        ),
-      ),
-    );
-  }
-}
-
-class _Content extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        _Header(),
-        const SizedBox(height: 24),
-        _InfoBox(),
-        const SizedBox(height: 24),
-        _TextField(label: "Nombre de la organización", hint: "Ej. Fundación Ayuda"),
-        const SizedBox(height: 24),
-        _TextField(label: "Ciudad", hint: "Ej. Sevilla"),
-        const SizedBox(height: 120),
-      ],
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.centerLeft,
-      children: [
-        // Imagen de portada
-        SizedBox(
-          width: double.infinity,
-          height: 150,
-          child: Stack(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Opacity(
-                opacity: 0.2,
-                child: Image.network(
-                  "https://placehold.co/390x131",
-                  width: double.infinity,
-                  height: 150,
-                  fit: BoxFit.cover,
+              Center(
+                child: _ImagePickerCard(
+                  title: 'Cambiar logo',
+                  imageBytes: _logoPreview,
+                  onTap: _isSaving ? null : _pickLogo,
                 ),
               ),
+              const SizedBox(height: 8),
+              const Center(
+                child: Text(
+                  'Imagen de perfil',
+                  style: TextStyle(
+                    color: _EditColors.dark,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const _FieldLabel('Imagen de portada'),
+              const SizedBox(height: 8),
+              _CoverPickerCard(
+                imageBytes: _coverPreview,
+                onTap: _isSaving ? null : _pickCover,
+              ),
+              const SizedBox(height: 20),
+              const _FieldLabel('Nombre de la organizacion'),
+              const SizedBox(height: 8),
+              _InputField(
+                controller: _nameController,
+                hint: 'Ej. Fundacion Ayuda',
+                readOnly: _isSaving,
+              ),
+              const SizedBox(height: 20),
+              const _FieldLabel('Ciudad'),
+              const SizedBox(height: 8),
+              FutureBuilder<List<String>>(
+                future: _loadProvincias(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const SizedBox(
+                      height: 56,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  final provincias = snapshot.data!;
+                  return Autocomplete<String>(
+                    optionsBuilder: (value) {
+                      if (value.text.isEmpty) return const Iterable<String>.empty();
+                      return provincias.where(
+                        (city) => city.toLowerCase().contains(value.text.toLowerCase()),
+                      );
+                    },
+                    fieldViewBuilder: (context, textController, focusNode, onSubmit) {
+                      if (_cityController.text.isNotEmpty && textController.text.isEmpty) {
+                        textController.text = _cityController.text;
+                      }
+
+                      return TextField(
+                        controller: textController,
+                        focusNode: focusNode,
+                        enabled: !_isSaving,
+                        onChanged: (value) {
+                          _cityController.text = value;
+                          _selectedCity = value;
+                        },
+                        onSubmitted: (_) => onSubmit(),
+                        decoration: _inputDecoration('Ej. Madrid'),
+                      );
+                    },
+                    optionsViewBuilder: (context, onSelected, options) {
+                      return Align(
+                        alignment: Alignment.topLeft,
+                        child: Material(
+                          color: _EditColors.white,
+                          elevation: 4,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            constraints: const BoxConstraints(maxHeight: 220),
+                            decoration: BoxDecoration(
+                              color: _EditColors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: _EditColors.grayLight),
+                            ),
+                            child: ListView.builder(
+                              padding: EdgeInsets.zero,
+                              shrinkWrap: true,
+                              itemCount: options.length,
+                              itemBuilder: (context, index) {
+                                final option = options.elementAt(index);
+                                return InkWell(
+                                  onTap: () => onSelected(option),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    child: Text(option),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    onSelected: (selection) {
+                      setState(() {
+                        _selectedCity = selection;
+                        _cityController.text = selection;
+                      });
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              const _FieldLabel('Descripcion'),
+              const SizedBox(height: 8),
+              _TextAreaField(
+                controller: _descriptionController,
+                hint: 'Cuentanos sobre la mision de la organizacion...',
+                enabled: !_isSaving,
+              ),
+              const SizedBox(height: 20),
               Container(
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0x1910B77F),
-                  border: Border.all(color: const Color(0x4C10B77F), width: 2),
+                  color: _EditColors.primary10,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _EditColors.primary30),
+                ),
+                child: const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, color: _EditColors.primary, size: 18),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Edita la informacion visible para voluntarios y colaboradores.',
+                        style: TextStyle(
+                          color: _EditColors.primary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 100),
             ],
           ),
         ),
-
-        // Avatar
-        Positioned(
-          left: 24,
-          bottom: -40,
-          child: Container(
-            width: 128,
-            height: 128,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(width: 4, color: Colors.white),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x19000000),
-                  blurRadius: 6,
-                  offset: Offset(0, 4),
-                )
-              ],
-            ),
-            child: const Center(
-              child: Text(
-                "IMAGEN DE PERFIL",
-                style: TextStyle(
-                  color: Color(0xFF10B77F),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _InfoBox extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0x1910B77F),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x3310B77F)),
       ),
-      child: const Text(
-        "Esta información será pública y ayudará a los voluntarios a conocer mejor vuestra labor.",
-        style: TextStyle(
-          color: Color(0xFF334155),
-          fontSize: 14,
-        ),
-      ),
-    );
-  }
-}
-
-class _TextField extends StatelessWidget {
-  final String label;
-  final String hint;
-
-  const _TextField({required this.label, required this.hint});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF1E293B),
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            height: 56,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Color(0xFFE2E8F0)),
-            ),
-            alignment: Alignment.centerLeft,
-            child: Text(
-              hint,
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+        child: SizedBox(
+          height: 54,
+          child: ElevatedButton.icon(
+            onPressed: _isSaving ? null : _saveChanges,
+            icon: _isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: _EditColors.white,
+                    ),
+                  )
+                : const Icon(Icons.save_alt_outlined, size: 20),
+            label: Text(
+              _isSaving ? 'Guardando...' : 'Guardar cambios',
               style: const TextStyle(
-                color: Color(0xFF94A3B8),
                 fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
               ),
             ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _EditColors.primary,
+              foregroundColor: _EditColors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _SaveButton extends StatelessWidget {
+class _EditColors {
+  static const Color dark = Color(0xFF111827);
+  static const Color white = Color(0xFFFFFFFF);
+  static const Color primary = Color(0xFF10B77F);
+  static const Color grayMid = Color(0xFF9CA3AF);
+  static const Color grayLight = Color(0xFFE5E7EB);
+  static const Color primary30 = Color(0x4D10B77F);
+  static const Color primary10 = Color(0x1A10B77F);
+  static const Color primary05 = Color(0x0D10B77F);
+}
+
+class _ImagePickerCard extends StatelessWidget {
+  final String title;
+  final Uint8List? imageBytes;
+  final VoidCallback? onTap;
+
+  const _ImagePickerCard({
+    required this.title,
+    required this.imageBytes,
+    required this.onTap,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
-      ),
+    return GestureDetector(
+      onTap: onTap,
       child: Container(
-        height: 56,
+        width: 110,
+        height: 110,
         decoration: BoxDecoration(
-          color: const Color(0xFF10B77F),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x3310B77F),
-              blurRadius: 6,
-              offset: Offset(0, 4),
-            )
-          ],
+          color: _EditColors.primary05,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _EditColors.primary, width: 1.5),
         ),
-        child: const Center(
-          child: Text(
-            "Guardar Cambios",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
+        child: imageBytes == null
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.add_a_photo_outlined,
+                    color: _EditColors.primary,
+                    size: 36,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: _EditColors.primary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              )
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Image.memory(imageBytes!, fit: BoxFit.cover),
+              ),
       ),
+    );
+  }
+}
+
+class _CoverPickerCard extends StatelessWidget {
+  final Uint8List? imageBytes;
+  final VoidCallback? onTap;
+
+  const _CoverPickerCard({
+    required this.imageBytes,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        height: 140,
+        decoration: BoxDecoration(
+          color: _EditColors.primary05,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _EditColors.primary, width: 1.2),
+        ),
+        child: imageBytes == null
+            ? const Center(
+                child: Text(
+                  'Seleccionar imagen de portada',
+                  style: TextStyle(
+                    color: _EditColors.primary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(11),
+                child: Image.memory(imageBytes!, fit: BoxFit.cover),
+              ),
+      ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  final String text;
+
+  const _FieldLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        color: _EditColors.dark,
+        fontWeight: FontWeight.w600,
+        fontSize: 14,
+      ),
+    );
+  }
+}
+
+Future<List<String>> _loadProvincias() async {
+  final jsonString = await rootBundle.loadString('assets/data/spain.json');
+  final Map<String, dynamic> jsonData = json.decode(jsonString);
+  return List<String>.from(jsonData['provincias']);
+}
+
+InputDecoration _inputDecoration(String hint) {
+  return InputDecoration(
+    hintText: hint,
+    hintStyle: const TextStyle(color: _EditColors.grayMid, fontSize: 15),
+    filled: true,
+    fillColor: _EditColors.white,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: _EditColors.grayLight),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: _EditColors.grayLight),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: _EditColors.primary, width: 1.5),
+    ),
+  );
+}
+
+class _InputField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final bool readOnly;
+
+  const _InputField({
+    required this.controller,
+    required this.hint,
+    required this.readOnly,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      readOnly: readOnly,
+      decoration: _inputDecoration(hint),
+    );
+  }
+}
+
+class _TextAreaField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final bool enabled;
+
+  const _TextAreaField({
+    required this.controller,
+    required this.hint,
+    required this.enabled,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      maxLines: 5,
+      enabled: enabled,
+      decoration: _inputDecoration(hint),
     );
   }
 }
