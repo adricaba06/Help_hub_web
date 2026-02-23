@@ -4,10 +4,15 @@ part of 'organization_list_page_bloc.dart';
 sealed class OrganizationListPageEvent {}
 
 class LoadManagerOrganizations extends OrganizationListPageEvent {
-  final int page;
   final int size;
 
-  LoadManagerOrganizations({this.page = 0, this.size = 5});
+  LoadManagerOrganizations({this.size = 5});
+}
+
+class LoadMoreManagerOrganizations extends OrganizationListPageEvent {
+  final int size;
+
+  LoadMoreManagerOrganizations({this.size = 5});
 }
 
 class RemoveOrganizationFromList extends OrganizationListPageEvent {
