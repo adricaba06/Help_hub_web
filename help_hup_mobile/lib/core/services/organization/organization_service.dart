@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:help_hup_mobile/core/config/app_config.dart';
 import 'package:help_hup_mobile/core/interfaces/organization/create_organization_interface.dart';
 import 'package:help_hup_mobile/core/models/organization/create_organization_request.dart';
+import 'package:help_hup_mobile/core/models/organization/edit_organization_request.dart';
 import 'package:help_hup_mobile/core/models/organization/organization_list_response.dart';
 import 'package:help_hup_mobile/core/models/organization/organization_response.dart';
 import 'package:help_hup_mobile/core/services/session_service.dart';
@@ -113,6 +114,34 @@ class OrganizationService implements CreateOrganizationInterface {
   }
 
   @override
+  Future<Organization> editOrganization(
+    EditOrganizationRequest org,
+    int id,
+  ) async {
+    final headers = await _jsonHeaders();
+    final payload = jsonEncode(org.toJson());
+    final response = await http.put(
+      Uri.parse('$_apiBaseUrl/organizations/$id'),
+      headers: headers,
+      body: payload,
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return Organization.fromJson(jsonDecode(response.body));
+    }
+    if (response.statusCode == 401) {
+      await _storageService.clear();
+      SessionService.instance.notifyUnauthorized();
+      throw Exception('Sesion expirada. Inicia sesion nuevamente.');
+    }
+
+    throw Exception(
+      'Error al editar la organizacion (HTTP ${response.statusCode}). '
+      'Body: ${response.body}. Payload enviado: $payload',
+    );
+  }
+
+  @override
   Future<OrganizationListResponse> getManagersOrganizations({
     int page = 0,
     int size = 5,
@@ -208,7 +237,8 @@ String? _extractFieldId(String body) {
     if (decoded is num) return decoded.toInt().toString();
     if (decoded is String) return decoded;
     if (decoded is Map<String, dynamic>) {
-      final dynamic value = decoded['id'] ?? decoded['fieldId'] ?? decoded['uri'];
+      final dynamic value =
+          decoded['id'] ?? decoded['fieldId'] ?? decoded['uri'];
       return _normalizeUploadIdentifier(value);
     }
   } catch (_) {

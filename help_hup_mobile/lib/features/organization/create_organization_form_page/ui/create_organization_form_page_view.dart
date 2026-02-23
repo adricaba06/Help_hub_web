@@ -24,13 +24,16 @@ class CrearOrganizacionScreen extends StatefulWidget {
   const CrearOrganizacionScreen({super.key});
 
   @override
-  State<CrearOrganizacionScreen> createState() => _CrearOrganizacionScreenState();
+  State<CrearOrganizacionScreen> createState() =>
+      _CrearOrganizacionScreenState();
 }
 
 class _CrearOrganizacionScreenState extends State<CrearOrganizacionScreen> {
   final _nombreController = TextEditingController();
   final _descripcionController = TextEditingController();
+  final _ciudadController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
+  List<String> _availableCities = const [];
 
   String? selectedCity;
   XFile? _logoImage;
@@ -43,7 +46,19 @@ class _CrearOrganizacionScreenState extends State<CrearOrganizacionScreen> {
   void dispose() {
     _nombreController.dispose();
     _descripcionController.dispose();
+    _ciudadController.dispose();
     super.dispose();
+  }
+
+  String? _matchCityFromList(String value) {
+    final input = value.trim().toLowerCase();
+    if (input.isEmpty) return null;
+    for (final city in _availableCities) {
+      if (city.toLowerCase() == input) {
+        return city;
+      }
+    }
+    return null;
   }
 
   Future<void> _pickLogo() async {
@@ -69,16 +84,19 @@ class _CrearOrganizacionScreenState extends State<CrearOrganizacionScreen> {
   }
 
   Future<void> _submit(BuildContext blocContext) async {
-    if (_nombreController.text.trim().isEmpty || selectedCity == null) {
+    final matchedCity = _matchCityFromList(_ciudadController.text);
+    if (_nombreController.text.trim().isEmpty || matchedCity == null) {
       ScaffoldMessenger.of(blocContext).showSnackBar(
-        const SnackBar(content: Text('Completa nombre y ciudad')),
+        const SnackBar(
+          content: Text('Completa nombre y selecciona una ciudad de la lista'),
+        ),
       );
       return;
     }
     if (_descripcionController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(blocContext).showSnackBar(
-        const SnackBar(content: Text('Completa la descripcion')),
-      );
+      ScaffoldMessenger.of(
+        blocContext,
+      ).showSnackBar(const SnackBar(content: Text('Completa la descripcion')));
       return;
     }
     if (_logoImage == null || _coverImage == null) {
@@ -97,12 +115,16 @@ class _CrearOrganizacionScreenState extends State<CrearOrganizacionScreen> {
     });
 
     try {
-      logoFieldId = await bloc.organizationService.uploadImageFile(_logoImage!.path);
-      coverFieldId = await bloc.organizationService.uploadImageFile(_coverImage!.path);
+      logoFieldId = await bloc.organizationService.uploadImageFile(
+        _logoImage!.path,
+      );
+      coverFieldId = await bloc.organizationService.uploadImageFile(
+        _coverImage!.path,
+      );
 
       final request = CreateOrganizationRequest(
         name: _nombreController.text.trim(),
-        city: selectedCity!,
+        city: matchedCity,
         logoFieldId: logoFieldId,
         coverFieldId: coverFieldId,
         description: _descripcionController.text.trim(),
@@ -124,235 +146,293 @@ class _CrearOrganizacionScreenState extends State<CrearOrganizacionScreen> {
   Widget build(BuildContext context) {
     return BlocProvider<CreateOrganizationFormPageBloc>(
       create: (_) => CreateOrganizationFormPageBloc(OrganizationService()),
-      child: BlocConsumer<CreateOrganizationFormPageBloc, CreateOrganizationFormPageState>(
-        listener: (context, state) {
-          if (state is CreateOrganizationFormPageLoaded) {
-            setState(() {
-              _isSubmitting = false;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Organizacion creada con exito')),
-            );
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const OrganizationListManagerView()),
-            );
-          } else if (state is CreateOrganizationFormPageError) {
-            setState(() {
-              _isSubmitting = false;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.error)));
-          }
-        },
-        builder: (context, state) {
-          final busy = _isSubmitting || state is CreateOrganizationFormPageLoading;
+      child:
+          BlocConsumer<
+            CreateOrganizationFormPageBloc,
+            CreateOrganizationFormPageState
+          >(
+            listener: (context, state) {
+              if (state is CreateOrganizationFormPageLoaded) {
+                setState(() {
+                  _isSubmitting = false;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Organizacion creada con exito'),
+                  ),
+                );
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const OrganizationListManagerView(),
+                  ),
+                );
+              } else if (state is CreateOrganizationFormPageError) {
+                setState(() {
+                  _isSubmitting = false;
+                });
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(state.error)));
+              }
+            },
+            builder: (context, state) {
+              final busy =
+                  _isSubmitting || state is CreateOrganizationFormPageLoading;
 
-          return Scaffold(
-            backgroundColor: AppColors.white,
-            appBar: AppBar(
-              backgroundColor: AppColors.white,
-              elevation: 0,
-              leading: const BackButton(color: AppColors.dark),
-              title: const Text(
-                'Crear Organizacion',
-                style: TextStyle(
-                  color: AppColors.dark,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 17,
+              return Scaffold(
+                backgroundColor: AppColors.white,
+                appBar: AppBar(
+                  backgroundColor: AppColors.white,
+                  elevation: 0,
+                  leading: const BackButton(color: AppColors.dark),
+                  title: const Text(
+                    'Crear Organizacion',
+                    style: TextStyle(
+                      color: AppColors.dark,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 17,
+                    ),
+                  ),
+                  centerTitle: true,
                 ),
-              ),
-              centerTitle: true,
-            ),
-            body: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: _ImagePickerCard(
-                        title: 'Subir logo',
-                        imageBytes: _logoPreview,
-                        onTap: busy ? null : _pickLogo,
-                      ),
+                body: SafeArea(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 24,
                     ),
-                    const SizedBox(height: 8),
-                    const Center(
-                      child: Text(
-                        'Imagen de perfil',
-                        style: TextStyle(
-                          color: AppColors.dark,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: _ImagePickerCard(
+                            title: 'Subir logo',
+                            imageBytes: _logoPreview,
+                            onTap: busy ? null : _pickLogo,
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const _FieldLabel('Imagen de cover'),
-                    const SizedBox(height: 8),
-                    _CoverPickerCard(
-                      imageBytes: _coverPreview,
-                      onTap: busy ? null : _pickCover,
-                    ),
-                    const SizedBox(height: 20),
-                    const _FieldLabel('Nombre de la organizacion'),
-                    const SizedBox(height: 8),
-                    _InputField(
-                      controller: _nombreController,
-                      hint: 'Ej. Fundacion Ayuda',
-                      readOnly: busy,
-                    ),
-                    const SizedBox(height: 20),
-                    const _FieldLabel('Ciudad'),
-                    const SizedBox(height: 8),
-                    FutureBuilder<List<String>>(
-                      future: cargarProvincias(),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return const SizedBox(
-                            height: 56,
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        }
-
-                        final provincias = snapshot.data!;
-                        return Autocomplete<String>(
-                          optionsBuilder: (TextEditingValue textEditingValue) {
-                            if (textEditingValue.text.isEmpty) {
-                              return const Iterable<String>.empty();
+                        const SizedBox(height: 8),
+                        const Center(
+                          child: Text(
+                            'Imagen de perfil',
+                            style: TextStyle(
+                              color: AppColors.dark,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const _FieldLabel('Imagen de cover'),
+                        const SizedBox(height: 8),
+                        _CoverPickerCard(
+                          imageBytes: _coverPreview,
+                          onTap: busy ? null : _pickCover,
+                        ),
+                        const SizedBox(height: 20),
+                        const _FieldLabel('Nombre de la organizacion'),
+                        const SizedBox(height: 8),
+                        _InputField(
+                          controller: _nombreController,
+                          hint: 'Ej. Fundacion Ayuda',
+                          readOnly: busy,
+                        ),
+                        const SizedBox(height: 20),
+                        const _FieldLabel('Ciudad'),
+                        const SizedBox(height: 8),
+                        FutureBuilder<List<String>>(
+                          future: cargarProvincias(),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const SizedBox(
+                                height: 56,
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
                             }
-                            return provincias.where(
-                              (provincia) => provincia.toLowerCase().contains(
-                                textEditingValue.text.toLowerCase(),
-                              ),
-                            );
-                          },
-                          fieldViewBuilder: (context, textController, focusNode, onFieldSubmitted) {
-                            return TextField(
-                              controller: textController,
-                              focusNode: focusNode,
-                              enabled: !busy,
-                              onSubmitted: (_) => onFieldSubmitted(),
-                              decoration: _inputDecoration('Ej. Madrid'),
-                            );
-                          },
-                          optionsViewBuilder: (context, onSelected, options) {
-                            return Align(
-                              alignment: Alignment.topLeft,
-                              child: Material(
-                                color: AppColors.white,
-                                elevation: 4,
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  constraints: const BoxConstraints(maxHeight: 220),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: AppColors.grayLight),
-                                  ),
-                                  child: ListView.builder(
-                                    padding: EdgeInsets.zero,
-                                    shrinkWrap: true,
-                                    itemCount: options.length,
-                                    itemBuilder: (context, index) {
-                                      final option = options.elementAt(index);
-                                      return InkWell(
-                                        onTap: () => onSelected(option),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                          child: Text(option),
+
+                            final provincias = snapshot.data!;
+                            _availableCities = provincias;
+                            return Autocomplete<String>(
+                              optionsBuilder:
+                                  (TextEditingValue textEditingValue) {
+                                    if (textEditingValue.text.isEmpty) {
+                                      return const Iterable<String>.empty();
+                                    }
+                                    return provincias.where(
+                                      (provincia) =>
+                                          provincia.toLowerCase().contains(
+                                            textEditingValue.text.toLowerCase(),
+                                          ),
+                                    );
+                                  },
+                              fieldViewBuilder:
+                                  (
+                                    context,
+                                    textController,
+                                    focusNode,
+                                    onFieldSubmitted,
+                                  ) {
+                                    if (_ciudadController.text.isNotEmpty &&
+                                        textController.text !=
+                                            _ciudadController.text) {
+                                      textController.text =
+                                          _ciudadController.text;
+                                    }
+                                    return TextField(
+                                      controller: textController,
+                                      focusNode: focusNode,
+                                      enabled: !busy,
+                                      onChanged: (value) {
+                                        _ciudadController.text = value;
+                                        selectedCity = _matchCityFromList(
+                                          value,
+                                        );
+                                      },
+                                      onSubmitted: (_) => onFieldSubmitted(),
+                                      decoration: _inputDecoration(
+                                        'Ej. Madrid',
+                                      ),
+                                    );
+                                  },
+                              optionsViewBuilder:
+                                  (context, onSelected, options) {
+                                    return Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Material(
+                                        color: AppColors.white,
+                                        elevation: 4,
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Container(
+                                          constraints: const BoxConstraints(
+                                            maxHeight: 220,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            border: Border.all(
+                                              color: AppColors.grayLight,
+                                            ),
+                                          ),
+                                          child: ListView.builder(
+                                            padding: EdgeInsets.zero,
+                                            shrinkWrap: true,
+                                            itemCount: options.length,
+                                            itemBuilder: (context, index) {
+                                              final option = options.elementAt(
+                                                index,
+                                              );
+                                              return InkWell(
+                                                onTap: () => onSelected(option),
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 12,
+                                                      ),
+                                                  child: Text(option),
+                                                ),
+                                              );
+                                            },
+                                          ),
                                         ),
-                                      );
-                                    },
+                                      ),
+                                    );
+                                  },
+                              onSelected: (String selection) {
+                                setState(() {
+                                  selectedCity = selection;
+                                  _ciudadController.text = selection;
+                                });
+                              },
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        const _FieldLabel('Descripcion'),
+                        const SizedBox(height: 8),
+                        _TextAreaField(
+                          controller: _descripcionController,
+                          hint:
+                              'Cuentanos sobre la mision de la organizacion...',
+                          enabled: !busy,
+                        ),
+                        const SizedBox(height: 20),
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary10,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.primary30),
+                          ),
+                          child: const Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                color: AppColors.primary,
+                                size: 18,
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Esta informacion sera publica y ayudara a los voluntarios a conocer mejor vuestra labor.',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 13,
                                   ),
                                 ),
                               ),
-                            );
-                          },
-                          onSelected: (String selection) {
-                            setState(() {
-                              selectedCity = selection;
-                            });
-                          },
-                        );
-                      },
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 100),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                    const _FieldLabel('Descripcion'),
-                    const SizedBox(height: 8),
-                    _TextAreaField(
-                      controller: _descripcionController,
-                      hint: 'Cuentanos sobre la mision de la organizacion...',
-                      enabled: !busy,
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary10,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.primary30),
-                      ),
-                      child: const Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.info_outline, color: AppColors.primary, size: 18),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Esta informacion sera publica y ayudara a los voluntarios a conocer mejor vuestra labor.',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 13,
+                  ),
+                ),
+                bottomNavigationBar: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                  child: SizedBox(
+                    height: 54,
+                    child: ElevatedButton.icon(
+                      onPressed: busy ? null : () => _submit(context),
+                      icon: busy
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.white,
                               ),
-                            ),
-                          ),
-                        ],
+                            )
+                          : const Icon(Icons.save_alt_outlined, size: 20),
+                      label: Text(
+                        busy ? 'Guardando...' : 'Guardar Organizacion',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
                       ),
                     ),
-                    const SizedBox(height: 100),
-                  ],
-                ),
-              ),
-            ),
-            bottomNavigationBar: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-              child: SizedBox(
-                height: 54,
-                child: ElevatedButton.icon(
-                  onPressed: busy ? null : () => _submit(context),
-                  icon: busy
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.white,
-                          ),
-                        )
-                      : const Icon(Icons.save_alt_outlined, size: 20),
-                  label: Text(
-                    busy ? 'Guardando...' : 'Guardar Organizacion',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 0,
                   ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
     );
   }
 }
@@ -465,7 +545,9 @@ class _FieldLabel extends StatelessWidget {
 }
 
 Future<List<String>> cargarProvincias() async {
-  final String jsonString = await rootBundle.loadString('assets/data/spain.json');
+  final String jsonString = await rootBundle.loadString(
+    'assets/data/spain.json',
+  );
   final Map<String, dynamic> jsonData = json.decode(jsonString);
   return List<String>.from(jsonData['provincias']);
 }
