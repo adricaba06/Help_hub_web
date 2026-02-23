@@ -494,20 +494,24 @@ class _RegisterPageViewState extends State<RegisterPageView> {
               ),
               SizedBox(height: 15),
               Center(
-                child: RichText(
-                  text: TextSpan(
-                    style: TextStyle(color: Colors.grey[700]),
-                    children:  [
-                      TextSpan(text: '¿Ya tienes una cuenta? '),
-                      TextSpan(
-                        text: 'Iniciar sesión',
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '¿Ya tienes una cuenta? ',
+                      style: TextStyle(color: Colors.grey[700]),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Text(
+                        'Iniciar sesión',
                         style: TextStyle(
                           color: Color(0xFF2FBC6F),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],
