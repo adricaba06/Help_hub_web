@@ -29,8 +29,44 @@ class OrganizationListManagerView extends StatelessWidget {
   }
 }
 
-class _OrganizationListScreen extends StatelessWidget {
+class _OrganizationListScreen extends StatefulWidget {
   const _OrganizationListScreen();
+
+  @override
+  State<_OrganizationListScreen> createState() => _OrganizationListScreenState();
+}
+
+class _OrganizationListScreenState extends State<_OrganizationListScreen> {
+  static const double _loadMoreThreshold = 200;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
+    final position = _scrollController.position;
+    if (position.pixels < position.maxScrollExtent - _loadMoreThreshold) return;
+
+    final bloc = context.read<OrganizationListPageBloc>();
+    final state = bloc.state;
+    if (state is! OrganizationListPageLoaded) return;
+    if (state.isLoadingMore || state.hasReachedEnd) return;
+
+    bloc.add(LoadMoreManagerOrganizations(size: state.pageSize));
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,14 +107,14 @@ class _OrganizationListScreen extends StatelessWidget {
                             error: state.error,
                             onRetry: () {
                               context.read<OrganizationListPageBloc>().add(
-                                LoadManagerOrganizations(),
+                                LoadManagerOrganizations(size: 5),
                               );
                             },
                           );
                         }
 
                         if (state is OrganizationListPageLoaded) {
-                          final organizations = state.organizations.content;
+                          final organizations = state.organizations;
                           final uniqueCities = organizations
                               .map((e) => e.city.trim().toLowerCase())
                               .toSet()
@@ -87,15 +123,16 @@ class _OrganizationListScreen extends StatelessWidget {
                           return RefreshIndicator(
                             onRefresh: () async {
                               context.read<OrganizationListPageBloc>().add(
-                                LoadManagerOrganizations(),
+                                LoadManagerOrganizations(size: state.pageSize),
                               );
                             },
                             child: ListView(
+                              controller: _scrollController,
                               physics: const AlwaysScrollableScrollPhysics(),
                               padding: const EdgeInsets.all(16),
                               children: [
                                 _PanelCard(
-                                  totalOrgs: state.organizations.totalElements,
+                                  totalOrgs: state.totalElements,
                                   totalCities: uniqueCities,
                                 ),
                                 const SizedBox(height: 16),
@@ -106,6 +143,56 @@ class _OrganizationListScreen extends StatelessWidget {
                                     child: _OrganizationCard(org: org),
                                   ),
                                 ),
+                                if (!state.hasReachedEnd && !state.isLoadingMore)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 4,
+                                      bottom: 16,
+                                    ),
+                                    child: Center(
+                                      child: ElevatedButton.icon(
+                                        onPressed: () {
+                                          context
+                                              .read<OrganizationListPageBloc>()
+                                              .add(
+                                                LoadMoreManagerOrganizations(
+                                                  size: state.pageSize,
+                                                ),
+                                              );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(
+                                            0xFF10B77F,
+                                          ),
+                                          foregroundColor: Colors.white,
+                                          elevation: 0,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 20,
+                                            vertical: 12,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              999,
+                                            ),
+                                          ),
+                                        ),
+                                        icon: const Icon(Icons.expand_more),
+                                        label: const Text(
+                                          'Ver mas',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                if (state.isLoadingMore)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
                               ],
                             ),
                           );
