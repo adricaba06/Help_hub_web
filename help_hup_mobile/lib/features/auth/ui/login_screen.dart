@@ -1,5 +1,9 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:help_hup_mobile/core/services/UserService.dart';
+import 'package:help_hup_mobile/features/register_page/ui/register_page_view.dart';
+import 'package:help_hup_mobile/features/register_page/bloc/register_page_bloc.dart';
 import '../bloc/auth_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -507,8 +511,8 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: Color(0xFFF4F4F5))),
       ),
-      child: Text.rich(
-        const TextSpan(
+      child: RichText(
+        text: TextSpan(
           children: [
             TextSpan(
               text: '¿No tienes una cuenta? ',
@@ -527,6 +531,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w700,
               ),
+              recognizer: TapGestureRecognizer()
+              ..onTap = (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider(
+                      create: (_) => RegisterPageBloc(userService: Userservice()),
+                      child: const RegisterPageView(),
+                    ),
+                  ),
+                );
+              }
             ),
           ],
         ),
