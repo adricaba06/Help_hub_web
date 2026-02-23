@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
 import 'package:help_hup_mobile/core/services/storage_service.dart';
 import 'package:help_hup_mobile/features/organization/edit_organization_form_page/ui/edit_organization_form_page.dart';
+import 'package:help_hup_mobile/features/organization/organization_list/ui/organization_list_manager_view.dart';
 import 'package:help_hup_mobile/features/organization/view_organization_detail/bloc/view_organization_detail_bloc.dart';
 
 class ViewOrganizationDetailView extends StatelessWidget {
