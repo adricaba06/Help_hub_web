@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
 import 'package:help_hup_mobile/core/services/storage_service.dart';
+import 'package:help_hup_mobile/features/organization/edit_organization_form_page/ui/edit_organization_form_page.dart';
 import 'package:help_hup_mobile/features/organization/view_organization_detail/bloc/view_organization_detail_bloc.dart';
 
 class ViewOrganizationDetailView extends StatelessWidget {
@@ -78,8 +79,11 @@ class _ViewOrganizationDetailScreen extends StatelessWidget {
                   if (state is ViewOrganizationDetailLoaded) {
                     final org = state.organization;
                     final organizationService = OrganizationService();
+                    final orgDescription = (org.description != null && org.description!.trim().isNotEmpty)
+                        ? org.description!
+                        : 'Esta organizacion no tiene descripcion publicada.';
                     final coverUrl = organizationService.buildImageUrl(
-                      org.coverFieldId,
+                      org.coverFieldId
                     );
                     final logoUrl = organizationService.buildImageUrl(
                       org.logoFieldId,
@@ -299,15 +303,7 @@ class _ViewOrganizationDetailScreen extends StatelessWidget {
                                                 height: 1.5,
                                               ),
                                             ),
-                                            const Text(
-                                              'Director Regional',
-                                              style: TextStyle(
-                                                color: Color(0xFF64748B),
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w400,
-                                                height: 1.33,
-                                              ),
-                                            ),
+                              
                                           ],
                                         ),
                                       ),
@@ -327,7 +323,7 @@ class _ViewOrganizationDetailScreen extends StatelessWidget {
                                           ),
                                         ),
                                         child: const Text(
-                                          'Contactar',
+                                          '',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w700,
                                           ),
@@ -348,9 +344,9 @@ class _ViewOrganizationDetailScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
-                                  (org.description != null &&
-                                          org.description!.trim().isNotEmpty)
-                                      ? org.description!
+                                  (orgDescription != null &&
+                                          orgDescription!.trim().isNotEmpty)
+                                      ? orgDescription!
                                       : 'Esta organizacion no tiene descripcion publicada.',
                                   style: const TextStyle(
                                     color: Color(0xFF475569),
@@ -387,7 +383,15 @@ class _ViewOrganizationDetailScreen extends StatelessWidget {
                                 SizedBox(
                                   width: double.infinity,
                                   child: OutlinedButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              EditOrganizationScreen(),
+                                        ),
+                                      );
+                                    },
                                     style: OutlinedButton.styleFrom(
                                       minimumSize: const Size.fromHeight(56),
                                       side: const BorderSide(
