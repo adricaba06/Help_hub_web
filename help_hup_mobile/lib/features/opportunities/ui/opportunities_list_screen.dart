@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/services/favorite_opportunity_service.dart';
 import '../../../widgets/app_bottom_nav_bar.dart';
-import '../../auth/bloc/auth_bloc.dart';
-import '../../auth/ui/login_screen.dart';
-import '../../profile/ui/profile_screen.dart';
 import '../../../widgets/opportunity_card.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/ui/login_screen.dart';
@@ -22,13 +20,19 @@ class OpportunitiesListScreen extends StatefulWidget {
 
 class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final FavoriteOpportunityService _favoriteService = FavoriteOpportunityService();
   Timer? _debounce;
   bool _hasLoadedData = false;
+  Set<int> _favoriteIds = <int>{};
+  Set<int> _favoriteUpdatingIds = <int>{};
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadFavoritesForUser();
+    });
   }
 
   @override
@@ -57,6 +61,77 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
           .read<OpportunityBloc>()
           .add(OpportunitySearchRequested(_searchController.text.trim()));
     });
+  }
+
+  bool _isUserRole(AuthState authState) {
+    if (authState is! AuthAuthenticated) return false;
+    return authState.user.role.trim().toUpperCase() == 'USER';
+  }
+
+  Future<void> _loadFavoritesForUser() async {
+    final authState = context.read<AuthBloc>().state;
+    if (!_isUserRole(authState)) {
+      if (!mounted) return;
+      setState(() {
+        _favoriteIds = <int>{};
+        _favoriteUpdatingIds = <int>{};
+      });
+      return;
+    }
+
+    try {
+      final favoriteIds = await _favoriteService.getMyFavoriteIds();
+      if (!mounted) return;
+      setState(() {
+        _favoriteIds = favoriteIds;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _favoriteIds = <int>{};
+      });
+    }
+  }
+
+  Future<void> _toggleFavorite(int opportunityId) async {
+    if (_favoriteUpdatingIds.contains(opportunityId)) return;
+
+    final isCurrentlyFavorite = _favoriteIds.contains(opportunityId);
+    setState(() {
+      _favoriteUpdatingIds = {..._favoriteUpdatingIds, opportunityId};
+      if (isCurrentlyFavorite) {
+        _favoriteIds = {..._favoriteIds}..remove(opportunityId);
+      } else {
+        _favoriteIds = {..._favoriteIds, opportunityId};
+      }
+    });
+
+    try {
+      if (isCurrentlyFavorite) {
+        await _favoriteService.removeFavorite(opportunityId);
+      } else {
+        await _favoriteService.addFavorite(opportunityId);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        if (isCurrentlyFavorite) {
+          _favoriteIds = {..._favoriteIds, opportunityId};
+        } else {
+          _favoriteIds = {..._favoriteIds}..remove(opportunityId);
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _favoriteUpdatingIds = {..._favoriteUpdatingIds}
+            ..remove(opportunityId);
+        });
+      }
+    }
   }
 
   void _onBottomNavTap(int index) {
@@ -90,9 +165,20 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
     // Cargar datos la primera vez que se muestra la pantalla
     _loadDataIfNeeded();
     
-    return Scaffold(
-      backgroundColor: const Color(0xFFF6F8F7),
-      body: SafeArea(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, authState) {
+        if (_isUserRole(authState)) {
+          _loadFavoritesForUser();
+          return;
+        }
+        setState(() {
+          _favoriteIds = <int>{};
+          _favoriteUpdatingIds = <int>{};
+        });
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF6F8F7),
+        body: SafeArea(
         child: Column(
           children: [
             // Header con HelpHub
@@ -327,8 +413,18 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
+                                final opportunity = state.opportunities[index];
+                                final showFavoriteButton = _isUserRole(
+                                  context.read<AuthBloc>().state,
+                                );
                                 return OpportunityCard(
-                                  opportunity: state.opportunities[index],
+                                  opportunity: opportunity,
+                                  showFavoriteButton: showFavoriteButton,
+                                  isFavorite: _favoriteIds.contains(opportunity.id),
+                                  isFavoriteLoading: _favoriteUpdatingIds.contains(opportunity.id),
+                                  onFavoriteTap: showFavoriteButton
+                                      ? () => _toggleFavorite(opportunity.id)
+                                      : null,
                                 );
                               },
                               childCount: state.opportunities.length,
@@ -354,10 +450,11 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: 0,
-        onTap: _onBottomNavTap,
+        ),
+        bottomNavigationBar: AppBottomNavBar(
+          currentIndex: 0,
+          onTap: _onBottomNavTap,
+        ),
       ),
     );
   }
