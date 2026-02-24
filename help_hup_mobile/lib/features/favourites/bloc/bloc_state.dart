@@ -1,6 +1,20 @@
 part of 'bloc_bloc.dart';
 
 @immutable
-sealed class BlocState {}
+sealed class FavoritesState {}
 
-final class BlocInitial extends BlocState {}
+final class FavoritesInitial extends FavoritesState {}
+
+final class FavoritesLoading extends FavoritesState {}
+
+final class FavoritesLoaded extends FavoritesState {
+	final List<OpportunityResponse> opportunities;
+
+	FavoritesLoaded({required this.opportunities});
+}
+
+final class FavoritesError extends FavoritesState {
+	final String message;
+
+	FavoritesError({required this.message});
+}
