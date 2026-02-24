@@ -1,18 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-<<<<<<< HEAD
 import '../../../widgets/app_bottom_nav_bar.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/ui/login_screen.dart';
 import '../../favourites/ui/list_favourite_screen.dart';
 import '../../opportunities/ui/opportunities_list_screen.dart';
 import '../bloc/profile_bloc.dart';
-=======
-import '../../auth/bloc/auth_bloc.dart';
-import '../../auth/ui/login_screen.dart';
-import '../bloc/profile_bloc.dart';
-import '../../../widgets/app_bottom_nav_bar.dart';
->>>>>>> 30cb3fff35d7203e6d288c0b04b7957cf05672b8
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -25,10 +18,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-<<<<<<< HEAD
-=======
-
->>>>>>> 30cb3fff35d7203e6d288c0b04b7957cf05672b8
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthAuthenticated) {
       context.read<ProfileBloc>().add(ProfileRequested());
@@ -38,13 +27,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _openLogin() async {
     await Navigator.push(
       context,
-<<<<<<< HEAD
       MaterialPageRoute(builder: (_) => const LoginScreen()),
-=======
-      MaterialPageRoute(
-        builder: (_) => const LoginScreen(),
-      ),
->>>>>>> 30cb3fff35d7203e6d288c0b04b7957cf05672b8
     );
 
     if (!mounted) return;
@@ -67,7 +50,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Container(
               color: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-<<<<<<< HEAD
               child: const Center(
                 child: Text(
                   'Perfil',
@@ -81,41 +63,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             Expanded(
-              child:
-                  isAuthenticated ? _buildAuthenticatedContent() : _buildGuestContent(),
-=======
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      if (Navigator.of(context).canPop()) {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new,
-                      size: 18,
-                      color: Color(0xFF18181B),
-                    ),
-                  ),
-                  const Expanded(
-                    child: Text(
-                      'Perfil',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFF18181B),
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 40),
-                ],
-              ),
-            ),
-            Expanded(
               child: isAuthenticated ? _buildAuthenticatedContent() : _buildGuestContent(),
->>>>>>> 30cb3fff35d7203e6d288c0b04b7957cf05672b8
             ),
           ],
         ),
@@ -123,7 +71,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 3,
         onTap: (index) {
-<<<<<<< HEAD
           if (index == 0) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (_) => const OpportunitiesListScreen()),
@@ -139,10 +86,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
               );
             }
-=======
-          if (index == 0 && Navigator.of(context).canPop()) {
-            Navigator.of(context).pop();
->>>>>>> 30cb3fff35d7203e6d288c0b04b7957cf05672b8
           }
         },
       ),

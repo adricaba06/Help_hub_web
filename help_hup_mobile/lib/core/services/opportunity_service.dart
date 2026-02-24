@@ -4,14 +4,6 @@ import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
 import '../models/opportunity_response.dart';
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-import 'session_service.dart';
-import 'storage_service.dart';
->>>>>>> origin/main
->>>>>>> 30cb3fff35d7203e6d288c0b04b7957cf05672b8
 
 class OpportunityService {
   Future<List<OpportunityResponse>> searchOpportunities({
@@ -21,20 +13,6 @@ class OpportunityService {
     DateTime? dateTo,
   }) async {
     try {
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-      // Construir queryParameters dinámicamente
-=======
-      final token = await _storage.getToken();
-      if (token == null || token.isEmpty) {
-        await _storage.clear();
-        SessionService.instance.notifyUnauthorized();
-        throw Exception('Sesion expirada. Inicia sesion nuevamente.');
-      }
-
->>>>>>> origin/main
->>>>>>> 30cb3fff35d7203e6d288c0b04b7957cf05672b8
       final Map<String, String> queryParams = {};
 
       if (query != null && query.isNotEmpty) {
@@ -63,13 +41,6 @@ class OpportunityService {
         uri,
         headers: {
           'Content-Type': 'application/json',
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-          'Authorization': 'Bearer $token',
->>>>>>> origin/main
->>>>>>> 30cb3fff35d7203e6d288c0b04b7957cf05672b8
         },
       );
 

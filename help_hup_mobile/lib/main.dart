@@ -7,19 +7,12 @@ import 'core/config/bloc_observer.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/opportunity_service.dart';
 import 'core/services/profile_service.dart';
-<<<<<<< HEAD
-=======
-import 'core/services/session_service.dart';
->>>>>>> 30cb3fff35d7203e6d288c0b04b7957cf05672b8
 import 'core/services/storage_service.dart';
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/opportunities/bloc/opportunity_bloc.dart';
 import 'features/opportunities/ui/opportunities_list_screen.dart';
 import 'features/profile/bloc/profile_bloc.dart';
-<<<<<<< HEAD
-=======
 import 'widgets/splash_screen.dart';
->>>>>>> 30cb3fff35d7203e6d288c0b04b7957cf05672b8
 
 void main() async {
   // Ensure Flutter engine is initialized before any plugin calls

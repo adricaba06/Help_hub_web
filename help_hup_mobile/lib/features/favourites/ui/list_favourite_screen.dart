@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/models/opportunity_response.dart';
 import '../../../core/services/favorite_opportunity_service.dart';
 import '../../../widgets/app_bottom_nav_bar.dart';
 import '../../../widgets/opportunity_card.dart';
@@ -67,14 +66,7 @@ class _ListFavouriteScreenState extends State<ListFavouriteScreen> {
 												letterSpacing: -0.5,
 											),
 										),
-										IconButton(
-											icon: const Icon(Icons.logout_outlined,
-													color: Color(0xFF52525B)),
-											onPressed: () {
-												context.read<AuthBloc>().add(AuthLogoutRequested());
-											},
-											tooltip: 'Cerrar sesión',
-										),
+										const SizedBox(width: 40),
 									],
 								),
 							),

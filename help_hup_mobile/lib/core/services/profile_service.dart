@@ -23,17 +23,11 @@ class ProfileService {
     );
 
     if (response.statusCode == 200) {
-<<<<<<< HEAD
       final user = UserResponse.fromJson(
         jsonDecode(response.body) as Map<String, dynamic>,
       );
       await _storage.saveUser(user);
       return user;
-=======
-      return UserResponse.fromJson(
-        jsonDecode(response.body) as Map<String, dynamic>,
-      );
->>>>>>> 30cb3fff35d7203e6d288c0b04b7957cf05672b8
     }
 
     if (response.statusCode == 401) {
@@ -41,15 +35,9 @@ class ProfileService {
     }
 
     if (response.statusCode == 404) {
-<<<<<<< HEAD
       final localUser = await _storage.getUser();
       if (localUser != null) {
         return localUser;
-=======
-      final storedUser = await _storage.getUser();
-      if (storedUser != null) {
-        return storedUser;
->>>>>>> 30cb3fff35d7203e6d288c0b04b7957cf05672b8
       }
       throw Exception('Perfil no encontrado.');
     }

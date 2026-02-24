@@ -37,4 +37,9 @@ class StorageService {
     final token = await getToken();
     return token != null;
   }
+
+  Future<void> clear() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
 }

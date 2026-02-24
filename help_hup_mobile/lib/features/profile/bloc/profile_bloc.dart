@@ -23,13 +23,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       final user = await profileService.getMyProfile();
       emit(ProfileLoaded(user: user));
     } catch (e) {
-<<<<<<< HEAD
       final message = e.toString().replaceFirst('Exception: ', '');
       emit(ProfileError(message: message));
-=======
-      final errorMessage = e.toString().replaceFirst('Exception: ', '');
-      emit(ProfileError(message: errorMessage));
->>>>>>> 30cb3fff35d7203e6d288c0b04b7957cf05672b8
     }
   }
 }
