@@ -19,3 +19,10 @@ final class RefreshOrganizationOpportunities
     extends OrganizationOpportunitiesEvent {
   const RefreshOrganizationOpportunities();
 }
+
+final class ApplyOrganizationOpportunitiesFilter
+    extends OrganizationOpportunitiesEvent {
+  final OpportunityFilter filter;
+
+  const ApplyOrganizationOpportunitiesFilter(this.filter);
+}

@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:help_hup_mobile/core/models/opportunity_filter.dart';
 import 'package:help_hup_mobile/core/models/opportunity_response.dart';
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
 import 'package:meta/meta.dart';
@@ -13,6 +14,7 @@ class OrganizationOpportunitiesBloc
   final int organizationId;
   final int pageSize;
   bool _isFetching = false;
+  OpportunityFilter _currentFilter = const OpportunityFilter();
 
   OrganizationOpportunitiesBloc({
     required this.organizationService,
@@ -22,6 +24,7 @@ class OrganizationOpportunitiesBloc
     on<LoadOrganizationOpportunities>(_onLoad);
     on<LoadMoreOrganizationOpportunities>(_onLoadMore);
     on<RefreshOrganizationOpportunities>(_onRefresh);
+    on<ApplyOrganizationOpportunitiesFilter>(_onApplyFilter);
   }
 
   Future<void> _onLoad(
@@ -37,6 +40,7 @@ class OrganizationOpportunitiesBloc
         organizationId: organizationId,
         page: 0,
         size: pageSize,
+        filter: _currentFilter,
       );
 
       emit(
@@ -46,6 +50,7 @@ class OrganizationOpportunitiesBloc
           totalPages: response.totalPages,
           currentPage: 0,
           pageSize: pageSize,
+          filter: _currentFilter,
         ),
       );
     } catch (e) {
@@ -80,6 +85,7 @@ class OrganizationOpportunitiesBloc
         organizationId: organizationId,
         page: nextPage,
         size: current.pageSize,
+        filter: _currentFilter,
       );
 
       final merged = <OpportunityResponse>[
@@ -98,6 +104,7 @@ class OrganizationOpportunitiesBloc
           totalPages: response.totalPages,
           currentPage: nextPage,
           isLoadingMore: false,
+          filter: _currentFilter,
         ),
       );
     } catch (_) {
@@ -105,5 +112,13 @@ class OrganizationOpportunitiesBloc
     } finally {
       _isFetching = false;
     }
+  }
+
+  Future<void> _onApplyFilter(
+    ApplyOrganizationOpportunitiesFilter event,
+    Emitter<OrganizationOpportunitiesState> emit,
+  ) async {
+    _currentFilter = event.filter;
+    await _onLoad(const LoadOrganizationOpportunities(), emit);
   }
 }

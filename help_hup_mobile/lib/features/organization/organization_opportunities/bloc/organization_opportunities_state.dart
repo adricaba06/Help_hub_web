@@ -16,6 +16,7 @@ final class OrganizationOpportunitiesLoaded
   final int totalPages;
   final int currentPage;
   final int pageSize;
+  final OpportunityFilter filter;
   final bool isLoadingMore;
 
   bool get hasReachedEnd =>
@@ -27,6 +28,7 @@ final class OrganizationOpportunitiesLoaded
     required this.totalPages,
     required this.currentPage,
     required this.pageSize,
+    required this.filter,
     this.isLoadingMore = false,
   });
 
@@ -36,6 +38,7 @@ final class OrganizationOpportunitiesLoaded
     int? totalPages,
     int? currentPage,
     int? pageSize,
+    OpportunityFilter? filter,
     bool? isLoadingMore,
   }) {
     return OrganizationOpportunitiesLoaded(
@@ -44,6 +47,7 @@ final class OrganizationOpportunitiesLoaded
       totalPages: totalPages ?? this.totalPages,
       currentPage: currentPage ?? this.currentPage,
       pageSize: pageSize ?? this.pageSize,
+      filter: filter ?? this.filter,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     );
   }
