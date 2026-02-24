@@ -7,6 +7,7 @@ import 'package:help_hup_mobile/core/models/organization/create_organization_req
 import 'package:help_hup_mobile/core/models/organization/edit_organization_request.dart';
 import 'package:help_hup_mobile/core/models/organization/organization_list_response.dart';
 import 'package:help_hup_mobile/core/models/organization/organization_response.dart';
+import 'package:help_hup_mobile/core/models/opportunity_page_response.dart';
 import 'package:help_hup_mobile/core/services/session_service.dart';
 import 'package:help_hup_mobile/core/services/storage_service.dart';
 import 'package:http/http.dart' as http;
@@ -198,6 +199,30 @@ class OrganizationService implements CreateOrganizationInterface {
       throw Exception('Sesion expirada. Inicia sesion nuevamente.');
     } else {
       throw Exception('Error al obtener el detalle de la organizacion');
+    }
+  }
+
+  Future<OpportunityPageResponse> getOpportunitiesByOrganizationId({
+    required int organizationId,
+    int page = 0,
+    int size = 8,
+  }) async {
+    final headers = await _jsonHeaders();
+    final response = await http.get(
+      Uri.parse(
+        '$_apiBaseUrl/organizations/$organizationId/opportunities?page=$page&size=$size&sort=title,asc',
+      ),
+      headers: headers,
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return OpportunityPageResponse.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 401) {
+      await _storageService.clear();
+      SessionService.instance.notifyUnauthorized();
+      throw Exception('Sesion expirada. Inicia sesion nuevamente.');
+    } else {
+      throw Exception('Error al obtener oportunidades de la organizacion');
     }
   }
 }
