@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../core/models/opportunity_response.dart';
+import '../core/models/opportunity_response.dart';
 
 class OpportunityCard extends StatelessWidget {
   final OpportunityResponse opportunity;
@@ -18,21 +18,18 @@ class OpportunityCard extends StatelessWidget {
   }
 
   String _formatProgress() {
-    // Calculamos las plazas ocupadas pero sin exceder el límite
-    // Por ahora usamos 0 hasta que el backend proporcione el dato real
     final occupied = 0;
     return '$occupied/${opportunity.seats} ocupadas';
   }
 
   String _getOrganizationName() {
-    // Organizaciones ficticias basadas en el título
-    if (opportunity.title.toLowerCase().contains('alimento') || 
+    if (opportunity.title.toLowerCase().contains('alimento') ||
         opportunity.title.toLowerCase().contains('comida') ||
         opportunity.title.toLowerCase().contains('reparto')) {
       return 'CRUZ ROJA';
-    } else if (opportunity.title.toLowerCase().contains('escolar') || 
-               opportunity.title.toLowerCase().contains('apoy') ||
-               opportunity.title.toLowerCase().contains('educación')) {
+    } else if (opportunity.title.toLowerCase().contains('escolar') ||
+        opportunity.title.toLowerCase().contains('apoy') ||
+        opportunity.title.toLowerCase().contains('educación')) {
       return 'EDUCATODOS';
     }
     return 'VOLUNTARIADO';
@@ -46,12 +43,11 @@ class OpportunityCard extends StatelessWidget {
   }
 
   String _getImageForOpportunity() {
-    // Imágenes de placeholder basadas en el tipo de oportunidad
-    if (opportunity.title.toLowerCase().contains('alimento') || 
+    if (opportunity.title.toLowerCase().contains('alimento') ||
         opportunity.title.toLowerCase().contains('comida')) {
       return 'https://images.unsplash.com/photo-1593113646773-028c64a8f1b8?w=400&h=300&fit=crop';
-    } else if (opportunity.title.toLowerCase().contains('escolar') || 
-               opportunity.title.toLowerCase().contains('apoy')) {
+    } else if (opportunity.title.toLowerCase().contains('escolar') ||
+        opportunity.title.toLowerCase().contains('apoy')) {
       return 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=300&fit=crop';
     }
     return 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=400&h=300&fit=crop';
@@ -68,7 +64,6 @@ class OpportunityCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Imagen con badge
           Stack(
             children: [
               ClipRRect(
@@ -105,7 +100,6 @@ class OpportunityCard extends StatelessWidget {
                   },
                 ),
               ),
-              // Badge de estado
               Positioned(
                 top: 12,
                 left: 12,
@@ -130,13 +124,11 @@ class OpportunityCard extends StatelessWidget {
               ),
             ],
           ),
-          
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Organización
                 Row(
                   children: [
                     Icon(
@@ -157,8 +149,6 @@ class OpportunityCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                
-                // Título
                 Text(
                   opportunity.title,
                   style: const TextStyle(
@@ -171,8 +161,6 @@ class OpportunityCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 12),
-                
-                // Ciudad y fechas
                 Row(
                   children: [
                     const Icon(
@@ -209,8 +197,6 @@ class OpportunityCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                
-                // Progreso de plazas
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

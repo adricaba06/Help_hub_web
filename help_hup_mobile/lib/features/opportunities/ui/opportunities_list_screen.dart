@@ -5,8 +5,10 @@ import '../../../widgets/app_bottom_nav_bar.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/ui/login_screen.dart';
 import '../../profile/ui/profile_screen.dart';
+import '../../../widgets/opportunity_card.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../favourites/ui/list_favourite_screen.dart';
 import '../bloc/opportunity_bloc.dart';
-import '../widgets/opportunity_card.dart';
 
 class OpportunitiesListScreen extends StatefulWidget {
   const OpportunitiesListScreen({super.key});
@@ -53,6 +55,14 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
           .read<OpportunityBloc>()
           .add(OpportunitySearchRequested(_searchController.text.trim()));
     });
+  }
+
+  void _onBottomNavTap(int index) {
+    if (index == 2) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const ListFavouriteScreen()),
+      );
+    }
   }
 
   @override
@@ -327,16 +337,7 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
       ),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 0,
-        onTap: (index) {
-          if (index == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ProfileScreen(),
-              ),
-            );
-          }
-        },
+        onTap: _onBottomNavTap,
       ),
     );
   }
