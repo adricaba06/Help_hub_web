@@ -14,7 +14,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(this.authService, this.storageService) : super(AuthInitial()) {
     on<AuthCheckSessionRequested>(_onCheckSession);
     on<AuthLoginRequested>(_onLogin);
-    on<AuthLogoutRequested>(_onLogout);
     on<AuthErrorCleared>(_onErrorCleared);
 
     add(AuthCheckSessionRequested());
@@ -55,14 +54,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final errorMessage = e.toString().replaceFirst('Exception: ', '');
       emit(AuthError(message: errorMessage));
     }
-  }
-
-  Future<void> _onLogout(
-    AuthLogoutRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    await storageService.clear();
-    emit(AuthUnauthenticated());
   }
 
   void _onErrorCleared(

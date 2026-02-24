@@ -5,12 +5,8 @@ import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/opportunity_detail_response.dart';
 import '../models/opportunity_response.dart';
-import 'session_service.dart';
-import 'storage_service.dart';
 
 class OpportunityService {
-  final StorageService _storage = StorageService();
-
   Future<List<OpportunityResponse>> searchOpportunities({
     String? query,
     String? city,
@@ -18,8 +14,6 @@ class OpportunityService {
     DateTime? dateTo,
   }) async {
     try {
-      final token = await _storage.getToken();
-
       final Map<String, String> queryParams = {};
 
       if (query != null && query.isNotEmpty) {
@@ -44,20 +38,18 @@ class OpportunityService {
         queryParameters: queryParams.isEmpty ? null : queryParams,
       );
 
-      final headers = <String, String>{'Content-Type': 'application/json'};
-      if (token != null && token.isNotEmpty) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-
-      final response = await http.get(uri, headers: headers);
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonList = jsonDecode(response.body);
         return jsonList.map((json) => OpportunityResponse.fromJson(json)).toList();
       } else if (response.statusCode == 401) {
-        await _storage.clear();
-        SessionService.instance.notifyUnauthorized();
-        throw Exception('Sesion expirada. Inicia sesion nuevamente.');
+        throw Exception('No autorizado. Por favor inicia sesión nuevamente.');
       } else if (response.statusCode == 404) {
         return [];
       } else {

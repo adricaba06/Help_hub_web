@@ -59,7 +59,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop(true);
+        }
+      },
       builder: (context, state) {
         final isLoading = state is AuthLoading;
 
@@ -173,7 +178,11 @@ class _LoginScreenState extends State<LoginScreen> {
             child: IconButton(
               padding: EdgeInsets.zero,
               icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: _dark),
-              onPressed: () {},
+              onPressed: () {
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                }
+              },
             ),
           ),
           Expanded(
