@@ -7,11 +7,13 @@ import 'storage_service.dart';
 class FavoriteOpportunityService {
   final StorageService _storage = StorageService();
 
-  Future<List<OpportunityResponse>> getMyFavorites() async {
+  Future<List<OpportunityResponse>> getMyFavorites({
+    bool useFallback = true,
+  }) async {
     try {
       final token = await _storage.getToken();
       if (token == null || token.isEmpty) {
-        throw Exception('No autorizado. Inicia sesión de nuevo.');
+        throw Exception('No autorizado. Inicia sesion de nuevo.');
       }
 
       final response = await http.get(
@@ -32,17 +34,83 @@ class FavoriteOpportunityService {
           return favorites;
         }
 
-        return _loadDefaultFavoritesForLoggedUser(token);
+        if (useFallback) {
+          return _loadDefaultFavoritesForLoggedUser(token);
+        }
+
+        return [];
       } else if (response.statusCode == 401 || response.statusCode == 403) {
-        throw Exception('No autorizado. Inicia sesión de nuevo.');
+        throw Exception('No autorizado. Inicia sesion de nuevo.');
       } else {
         throw Exception(
-            'Error del servidor (${response.statusCode}): ${response.body}');
+          'Error del servidor (${response.statusCode}): ${response.body}',
+        );
       }
     } catch (e) {
       if (e is Exception) rethrow;
-      throw Exception('Error de conexión: $e');
+      throw Exception('Error de conexion: $e');
     }
+  }
+
+  Future<Set<int>> getMyFavoriteIds() async {
+    final favorites = await getMyFavorites(useFallback: false);
+    return favorites.map((opportunity) => opportunity.id).toSet();
+  }
+
+  Future<void> addFavorite(int opportunityId) async {
+    final token = await _storage.getToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('No autorizado. Inicia sesion de nuevo.');
+    }
+
+    final response = await http.post(
+      Uri.parse('${AppConfig.baseUrl}/favorites/$opportunityId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200 ||
+        response.statusCode == 201 ||
+        response.statusCode == 204) {
+      return;
+    }
+
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      throw Exception('No autorizado. Inicia sesion de nuevo.');
+    }
+
+    throw Exception(
+      'Error al marcar favorito (${response.statusCode}): ${response.body}',
+    );
+  }
+
+  Future<void> removeFavorite(int opportunityId) async {
+    final token = await _storage.getToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('No autorizado. Inicia sesion de nuevo.');
+    }
+
+    final response = await http.delete(
+      Uri.parse('${AppConfig.baseUrl}/favorites/$opportunityId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      return;
+    }
+
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      throw Exception('No autorizado. Inicia sesion de nuevo.');
+    }
+
+    throw Exception(
+      'Error al quitar favorito (${response.statusCode}): ${response.body}',
+    );
   }
 
   Future<List<OpportunityResponse>> _loadDefaultFavoritesForLoggedUser(

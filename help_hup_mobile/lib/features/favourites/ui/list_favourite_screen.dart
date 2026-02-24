@@ -17,10 +17,56 @@ class ListFavouriteScreen extends StatefulWidget {
 }
 
 class _ListFavouriteScreenState extends State<ListFavouriteScreen> {
+  final FavoriteOpportunityService _favoriteService = FavoriteOpportunityService();
+  late final FavoritesBloc _favoritesBloc;
+  Set<int> _favoriteUpdatingIds = <int>{};
+
+  @override
+  void initState() {
+    super.initState();
+    _favoritesBloc = FavoritesBloc(FavoriteOpportunityService())
+      ..add(FavoritesRequested());
+  }
+
+  @override
+  void dispose() {
+    _favoritesBloc.close();
+    super.dispose();
+  }
 
 	void _reload() {
-		context.read<FavoritesBloc>().add(FavoritesRequested());
+		_favoritesBloc.add(FavoritesRequested());
 	}
+
+  bool _isUserRole(AuthState authState) {
+    if (authState is! AuthAuthenticated) return false;
+    return authState.user.role.trim().toUpperCase() == 'USER';
+  }
+
+  Future<void> _removeFavorite(int opportunityId) async {
+    if (_favoriteUpdatingIds.contains(opportunityId)) return;
+
+    setState(() {
+      _favoriteUpdatingIds = {..._favoriteUpdatingIds, opportunityId};
+    });
+
+    try {
+      await _favoriteService.removeFavorite(opportunityId);
+      if (!mounted) return;
+      _reload();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _favoriteUpdatingIds = {..._favoriteUpdatingIds}..remove(opportunityId);
+        });
+      }
+    }
+  }
 
 	void _onBottomNavTap(int index) {
 		if (index == 0) {
@@ -43,9 +89,8 @@ class _ListFavouriteScreenState extends State<ListFavouriteScreen> {
 
 	@override
 	Widget build(BuildContext context) {
-		return BlocProvider(
-			create: (_) => FavoritesBloc(FavoriteOpportunityService())
-				..add(FavoritesRequested()),
+		return BlocProvider.value(
+      value: _favoritesBloc,
 			child: Scaffold(
 				backgroundColor: const Color(0xFFF6F8F7),
 				body: SafeArea(
@@ -149,7 +194,18 @@ class _ListFavouriteScreenState extends State<ListFavouriteScreen> {
 											padding: const EdgeInsets.only(top: 16, bottom: 16),
 											itemCount: favorites.length,
 											itemBuilder: (context, index) {
-												return OpportunityCard(opportunity: favorites[index]);
+                        final authState = context.read<AuthBloc>().state;
+                        final showFavoriteButton = _isUserRole(authState);
+                        final opportunity = favorites[index];
+												return OpportunityCard(
+                          opportunity: opportunity,
+                          showFavoriteButton: showFavoriteButton,
+                          isFavorite: true,
+                          isFavoriteLoading: _favoriteUpdatingIds.contains(opportunity.id),
+                          onFavoriteTap: showFavoriteButton
+                              ? () => _removeFavorite(opportunity.id)
+                              : null,
+                        );
 											},
 										);
 									},
