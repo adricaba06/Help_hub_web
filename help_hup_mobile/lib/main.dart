@@ -11,7 +11,6 @@ import 'core/services/opportunity_service.dart';
 import 'core/services/session_service.dart';
 import 'core/services/storage_service.dart';
 import 'features/auth/bloc/auth_bloc.dart';
-import 'features/auth/ui/login_screen.dart';
 import 'features/opportunities/bloc/opportunity_bloc.dart';
 import 'features/opportunities/ui/opportunities_list_screen.dart';
 
@@ -102,7 +101,7 @@ class _AuthWrapper extends StatelessWidget {
           return const OpportunitiesListScreen();
         }
 
-        return const LoginScreen();
+        return const OpportunitiesListScreen();
       },
     );
   }

@@ -111,16 +111,6 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
                 _rowIconText(Icons.location_on_outlined, opp.city),
                 const SizedBox(height: 8),
                 _rowIconText(Icons.calendar_today_outlined, dateRange),
-
-                if (opp.description.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    opp.description,
-                    style: const TextStyle(
-                        color: Color(0xFF52525B), fontSize: 14, height: 1.5),
-                  ),
-                ],
-
                 const SizedBox(height: 16),
                 _infoBox(detail.acceptedCount, detail.seatsLeft, opp.seats),
 
