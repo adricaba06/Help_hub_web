@@ -3,9 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:help_hup_mobile/core/models/organization/organization_response.dart';
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
 import 'package:help_hup_mobile/core/services/storage_service.dart';
+import 'package:help_hup_mobile/features/auth/ui/login_screen.dart';
 import 'package:help_hup_mobile/features/organization/create_organization_form_page/ui/create_organization_form_page_view.dart';
 import 'package:help_hup_mobile/features/organization/delete_organization/bloc/delete_organization_bloc.dart';
 import 'package:help_hup_mobile/features/organization/organization_list/bloc/organization_list_page_bloc.dart';
+import 'package:help_hup_mobile/features/organization/organization_opportunities/ui/organization_opportunities_view.dart';
 import 'package:help_hup_mobile/features/organization/view_organization_detail/ui/view_organization_detail_view.dart';
 
 class OrganizationListManagerView extends StatelessWidget {
@@ -380,45 +382,79 @@ class _OrganizationCard extends StatelessWidget {
                 ],
               ),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                final deleteBloc = context.read<DeleteOrganizationBloc>();
-                final shouldDelete = await showDialog<bool>(
-                  context: context,
-                  builder: (dialogContext) {
-                    return AlertDialog(
-                      title: const Text('Confirmar eliminacion'),
-                      content: Text(
-                        'Seguro que quieres eliminar "${org.name}"?',
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OrganizationOpportunitiesView(
+                          organizationId: org.id,
+                          organizationName: org.name,
+                        ),
                       ),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop(false);
-                          },
-                          child: const Text('Cancelar'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop(true);
-                          },
-                          child: const Text(
-                            'Eliminar',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
                     );
                   },
-                );
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFF10B77F)),
+                    foregroundColor: const Color(0xFF10B77F),
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                  ),
+                  icon: const Icon(Icons.list_alt, size: 16),
+                  label: const Text('Ver oportunidades'),
+                ),
+                const SizedBox(height: 6),
+                TextButton(
+                  onPressed: () async {
+                    final deleteBloc = context.read<DeleteOrganizationBloc>();
+                    final shouldDelete = await showDialog<bool>(
+                      context: context,
+                      builder: (dialogContext) {
+                        return AlertDialog(
+                          title: const Text('Confirmar eliminacion'),
+                          content: Text(
+                            'Seguro que quieres eliminar "${org.name}"?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop(false);
+                              },
+                              child: const Text('Cancelar'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop(true);
+                              },
+                              child: const Text(
+                                'Eliminar',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
 
-                if (shouldDelete == true) {
-                  deleteBloc.add(
-                    SubmitDeleteOrganization(organizationId: org.id),
-                  );
-                }
-              },
-              child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                    if (shouldDelete == true) {
+                      deleteBloc.add(
+                        SubmitDeleteOrganization(organizationId: org.id),
+                      );
+                    }
+                  },
+                  child: const Text(
+                    'Eliminar',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
