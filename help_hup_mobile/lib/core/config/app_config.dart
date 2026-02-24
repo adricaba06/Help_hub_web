@@ -6,5 +6,6 @@ class AppConfig {
 
   static const String loginUrl = '$baseUrl/auth/login';
   static const String opportunitiesUrl = '$baseUrl/opportunity/';
+  static const String profileUrl = '$baseUrl/users/me';
   static const String favoritesUrl = '$baseUrl/favorites/me';
 }

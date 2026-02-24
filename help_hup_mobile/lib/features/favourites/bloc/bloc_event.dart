@@ -1,4 +1,6 @@
 part of 'bloc_bloc.dart';
 
 @immutable
-sealed class BlocEvent {}
+sealed class FavoritesEvent {}
+
+final class FavoritesRequested extends FavoritesEvent {}

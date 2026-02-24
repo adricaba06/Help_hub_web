@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:help_hup_mobile/features/organization/organization_list/ui/organization_list_manager_view.dart';
@@ -8,12 +6,12 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'core/config/bloc_observer.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/opportunity_service.dart';
-import 'core/services/session_service.dart';
+import 'core/services/profile_service.dart';
 import 'core/services/storage_service.dart';
 import 'features/auth/bloc/auth_bloc.dart';
-import 'features/auth/ui/login_screen.dart';
 import 'features/opportunities/bloc/opportunity_bloc.dart';
 import 'features/opportunities/ui/opportunities_list_screen.dart';
+import 'features/profile/bloc/profile_bloc.dart';
 
 void main() async {
   // Ensure Flutter engine is initialized before any plugin calls
@@ -36,20 +34,15 @@ class HelpHubApp extends StatefulWidget {
 
 class _HelpHubAppState extends State<HelpHubApp> {
   late final AuthBloc _authBloc;
-  late final StreamSubscription<void> _unauthorizedSub;
 
   @override
   void initState() {
     super.initState();
     _authBloc = AuthBloc(AuthService(), StorageService());
-    _unauthorizedSub = SessionService.instance.unauthorizedStream.listen((_) {
-      _authBloc.add(AuthLogoutRequested());
-    });
   }
 
   @override
   void dispose() {
-    _unauthorizedSub.cancel();
     _authBloc.close();
     super.dispose();
   }
@@ -60,6 +53,7 @@ class _HelpHubAppState extends State<HelpHubApp> {
       providers: [
         BlocProvider<AuthBloc>.value(value: _authBloc),
         BlocProvider(create: (_) => OpportunityBloc(OpportunityService())),
+        BlocProvider(create: (_) => ProfileBloc(ProfileService())),
       ],
       child: MaterialApp(
         title: 'HelpHub',
@@ -102,7 +96,7 @@ class _AuthWrapper extends StatelessWidget {
           return const OpportunitiesListScreen();
         }
 
-        return const LoginScreen();
+        return const OpportunitiesListScreen();
       },
     );
   }
