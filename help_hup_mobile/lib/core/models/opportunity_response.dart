@@ -1,47 +1,45 @@
 class OpportunityResponse {
   final int id;
   final String title;
-  final String description;
   final String city;
   final DateTime dateFrom;
   final DateTime dateTo;
-  final String status;
   final int seats;
+  final String status;
 
   OpportunityResponse({
     required this.id,
     required this.title,
-    required this.description,
     required this.city,
     required this.dateFrom,
     required this.dateTo,
-    required this.status,
     required this.seats,
+    required this.status,
   });
-
-  bool get isOpen => status == 'OPEN';
 
   factory OpportunityResponse.fromJson(Map<String, dynamic> json) {
     return OpportunityResponse(
-      id: (json['id'] as num).toInt(),
-      title: (json['title'] as String?) ?? '',
-      description: (json['description'] as String?) ?? '',
-      city: (json['city'] as String?) ?? '',
-      dateFrom: DateTime.parse(json['dateFrom'] as String),
-      dateTo: DateTime.parse(json['dateTo'] as String),
-      status: (json['status'] as String?) ?? 'CLOSED',
-      seats: (json['seats'] as num).toInt(),
+      id: json['id'],
+      title: json['title'],
+      city: json['city'],
+      dateFrom: DateTime.parse(json['dateFrom']),
+      dateTo: DateTime.parse(json['dateTo']),
+      seats: json['seats'],
+      status: json['status'],
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'description': description,
-        'city': city,
-        'dateFrom': dateFrom.toIso8601String(),
-        'dateTo': dateTo.toIso8601String(),
-        'status': status,
-        'seats': seats,
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'city': city,
+      'dateFrom': dateFrom.toIso8601String(),
+      'dateTo': dateTo.toIso8601String(),
+      'seats': seats,
+      'status': status,
+    };
+  }
+
+  bool get isOpen => status == 'OPEN';
 }

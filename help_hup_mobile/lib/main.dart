@@ -1,25 +1,66 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:help_hup_mobile/features/organization/organization_list/ui/organization_list_manager_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'features/auth/provider/auth_provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'core/config/bloc_observer.dart';
+import 'core/services/auth_service.dart';
+import 'core/services/opportunity_service.dart';
+import 'core/services/session_service.dart';
+import 'core/services/storage_service.dart';
+import 'features/auth/bloc/auth_bloc.dart';
 import 'features/auth/ui/login_screen.dart';
-import 'features/auth/ui/token_display_screen.dart';
+import 'features/opportunities/bloc/opportunity_bloc.dart';
+import 'features/opportunities/ui/opportunities_list_screen.dart';
 
 void main() async {
   // Ensure Flutter engine is initialized before any plugin calls
   WidgetsFlutterBinding.ensureInitialized();
   // Pre-warm SharedPreferences so the first frame has no async wait
   await SharedPreferences.getInstance();
+  // Initialize date formatting for Spanish locale
+  await initializeDateFormatting('es', null);
+  // Configure BLoC observer for global logging
+  Bloc.observer = AppBlocObserver();
   runApp(const HelpHubApp());
 }
 
-class HelpHubApp extends StatelessWidget {
+class HelpHubApp extends StatefulWidget {
   const HelpHubApp({super.key});
 
   @override
+  State<HelpHubApp> createState() => _HelpHubAppState();
+}
+
+class _HelpHubAppState extends State<HelpHubApp> {
+  late final AuthBloc _authBloc;
+  late final StreamSubscription<void> _unauthorizedSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _authBloc = AuthBloc(AuthService(), StorageService());
+    _unauthorizedSub = SessionService.instance.unauthorizedStream.listen((_) {
+      _authBloc.add(AuthLogoutRequested());
+    });
+  }
+
+  @override
+  void dispose() {
+    _unauthorizedSub.cancel();
+    _authBloc.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>.value(value: _authBloc),
+        BlocProvider(create: (_) => OpportunityBloc(OpportunityService())),
+      ],
       child: MaterialApp(
         title: 'HelpHub',
         debugShowCheckedModeBanner: false,
@@ -37,25 +78,36 @@ class HelpHubApp extends StatelessWidget {
   }
 }
 
+//  - - - - -- -- -  - - - - - - - - - - - - - --
 class _AuthWrapper extends StatelessWidget {
+  // esto se trata de un envoltorio donde dependiendo del estado y del rol se llevará a una pantalla o otra
   const _AuthWrapper();
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, _) {
-        switch (auth.status) {
-          case AuthStatus.initial:
-            return const _SplashScreen();
-          case AuthStatus.authenticated:
-            return const TokenDisplayScreen();
-          default:
-            return const LoginScreen();
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        if (state is AuthInitial || state is AuthLoading) {
+          return const _SplashScreen();
         }
+
+        if (state is AuthAuthenticated) {
+          final role = state.user.role.trim().toLowerCase();
+
+          if (role == 'manager') {
+            // manager
+            return const OrganizationListManagerView();
+          }
+
+          return const OpportunitiesListScreen();
+        }
+
+        return const LoginScreen();
       },
     );
   }
 }
+//  - - - - -- -- -  - - - - - - - - - - - - - --
 
 class _SplashScreen extends StatelessWidget {
   const _SplashScreen();
@@ -71,7 +123,11 @@ class _SplashScreen extends StatelessWidget {
             CircleAvatar(
               radius: 44,
               backgroundColor: Color(0xFF10B77F),
-              child: Icon(Icons.volunteer_activism, color: Colors.white, size: 48),
+              child: Icon(
+                Icons.volunteer_activism,
+                color: Colors.white,
+                size: 48,
+              ),
             ),
             SizedBox(height: 20),
             Text(
