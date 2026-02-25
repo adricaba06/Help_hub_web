@@ -6,6 +6,7 @@ import '../../auth/ui/login_screen.dart';
 import '../../favourites/ui/list_favourite_screen.dart';
 import '../../opportunities/ui/opportunities_list_screen.dart';
 import '../bloc/profile_bloc.dart';
+import '../../profile_edit/ui/profile_edit_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -309,7 +310,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _ActionButton(
                   label: 'Editar Perfil',
                   icon: Icons.edit,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ProfileEditScreen(user: user),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 10),
                 _ActionButton(
