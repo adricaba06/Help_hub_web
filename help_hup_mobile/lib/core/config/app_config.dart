@@ -10,4 +10,5 @@ class AppConfig {
   static const String profileUrl = '$baseUrl/users/me';
   static const String favoritesUrl = '$baseUrl/favorites/me';
   static const String applicationsUrl = '$baseUrl/applications';
+  static const String editProfileUrl = '$baseUrl/user/profile';
 }

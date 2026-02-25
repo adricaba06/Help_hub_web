@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import '../../../core/services/favorite_opportunity_service.dart';
 import '../../../widgets/app_bottom_nav_bar.dart';
 import '../../../widgets/opportunity_card.dart';
@@ -10,6 +11,8 @@ import '../../applications/ui/applications_list_screen.dart';
 import '../../favourites/ui/list_favourite_screen.dart';
 import '../../profile/ui/profile_screen.dart';
 import '../bloc/opportunity_bloc.dart';
+import '../provider/opportunity_detail_provider.dart';
+import 'opportunity_detail_screen.dart';
 
 class OpportunitiesListScreen extends StatefulWidget {
   const OpportunitiesListScreen({super.key});
@@ -426,18 +429,42 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
                                 final opportunity = state.opportunities[index];
-                                final showFavoriteButton = _isUserRole(
+                                final canFavorite = _isUserRole(
                                   context.read<AuthBloc>().state,
-                                );
-                                return OpportunityCard(
+                                ) && opportunity.isOpen;
+                                
+                                return InkWell(
+                                  borderRadius: BorderRadius.circular(16),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => ChangeNotifierProvider(
+                                          create: (_) =>
+                                              OpportunityDetailProvider(),
+                                          child: OpportunityDetailScreen(
+                                            opportunityId: opportunity.id,
+                                          ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: OpportunityCard(
                                   opportunity: opportunity,
-                                  showFavoriteButton: showFavoriteButton,
-                                  isFavorite: _favoriteIds.contains(opportunity.id),
-                                  isFavoriteLoading: _favoriteUpdatingIds.contains(opportunity.id),
-                                  onFavoriteTap: showFavoriteButton
+                                  showFavoriteButton: canFavorite,
+                                    isFavorite: _favoriteIds.contains(
+                                      opportunity.id,
+                                    ),
+                                    isFavoriteLoading:
+                                        _favoriteUpdatingIds.contains(
+                                          opportunity.id,
+                                        ),
+                                  onFavoriteTap: canFavorite
                                       ? () => _toggleFavorite(opportunity.id)
                                       : null,
-                                );
+                                  ),
+                              );
+                              
                               },
                               childCount: state.opportunities.length,
                             ),
