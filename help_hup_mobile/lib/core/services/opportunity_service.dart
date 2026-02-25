@@ -145,4 +145,63 @@ class OpportunityService {
 
     throw Exception('HTTP_${response.statusCode}_${response.body}');
   }
+
+  Future<void> createOpportunity({
+    required String title,
+    required String city,
+    required DateTime dateFrom,
+    required DateTime dateTo,
+    required int seats,
+    required String status,
+    required int orgId,
+    required String coverFieldId,
+  }) async {
+    if (orgId <= 0) {
+      throw Exception('INVALID_ORG_ID');
+    }
+
+    final token = await _storage.getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception('NO_TOKEN');
+    }
+
+    final url = Uri.parse('${AppConfig.baseUrl}/api/opportunity/add');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'title': title,
+        'city': city,
+        'dateFrom': _formatDate(dateFrom),
+        'dateTo': _formatDate(dateTo),
+        'seats': seats,
+        'status': status,
+        'orgId': orgId,
+        'coverFieldId': coverFieldId,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    }
+
+    if (response.statusCode == 401) {
+      await _storage.clear();
+      SessionService.instance.notifyUnauthorized();
+      throw Exception('UNAUTHORIZED');
+    }
+
+    throw Exception('HTTP_${response.statusCode}_${response.body}');
+  }
+
+  String _formatDate(DateTime date) {
+    final year = date.year.toString().padLeft(4, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
+  }
 }
