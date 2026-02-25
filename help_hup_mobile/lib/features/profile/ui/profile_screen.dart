@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../widgets/app_bottom_nav_bar.dart';
+import '../../applications/ui/applications_list_screen.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/ui/login_screen.dart';
 import '../../favourites/ui/list_favourite_screen.dart';
@@ -90,6 +91,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (authState is AuthAuthenticated) {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (_) => const ListFavouriteScreen()),
+              );
+            } else {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
+            }
+          } else if (!isManager && index == 1) {
+            final authState = context.read<AuthBloc>().state;
+            if (authState is AuthAuthenticated) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const ApplicationsListScreen()),
               );
             } else {
               Navigator.of(context).push(
