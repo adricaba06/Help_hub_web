@@ -414,15 +414,15 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
                                 final opportunity = state.opportunities[index];
-                                final showFavoriteButton = _isUserRole(
+                                final canFavorite = _isUserRole(
                                   context.read<AuthBloc>().state,
-                                );
+                                ) && opportunity.isOpen;
                                 return OpportunityCard(
                                   opportunity: opportunity,
-                                  showFavoriteButton: showFavoriteButton,
+                                  showFavoriteButton: canFavorite,
                                   isFavorite: _favoriteIds.contains(opportunity.id),
                                   isFavoriteLoading: _favoriteUpdatingIds.contains(opportunity.id),
-                                  onFavoriteTap: showFavoriteButton
+                                  onFavoriteTap: canFavorite
                                       ? () => _toggleFavorite(opportunity.id)
                                       : null,
                                 );
