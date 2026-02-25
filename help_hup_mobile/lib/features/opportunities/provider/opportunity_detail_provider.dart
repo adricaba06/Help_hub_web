@@ -28,22 +28,20 @@ class OpportunityDetailProvider extends ChangeNotifier {
     }
   }
 
-  Future<Object?> apply(int opportunityId, String motivation) async {
+  Future<bool> apply(int opportunityId, String motivation) async {
     applying = true;
     applyError = null;
     appliedOk = false;
     notifyListeners();
 
     try {
-      final res = await _service.applyToOpportunity(
-        opportunityId: opportunityId,
-        motivationText: motivation.trim(),
-      );
+      await _service.apply(opportunityId, motivation);
+      await load(opportunityId);
       appliedOk = true;
-      return res;
+      return true;
     } catch (e) {
       applyError = e.toString();
-      return null;
+      return false;
     } finally {
       applying = false;
       notifyListeners();
