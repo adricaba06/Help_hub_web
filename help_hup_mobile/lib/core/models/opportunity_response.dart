@@ -6,6 +6,7 @@ class OpportunityResponse {
   final DateTime dateTo;
   final int seats;
   final String status;
+  final int? organizationId;
 
   OpportunityResponse({
     required this.id,
@@ -15,6 +16,7 @@ class OpportunityResponse {
     required this.dateTo,
     required this.seats,
     required this.status,
+    this.organizationId,
   });
 
   factory OpportunityResponse.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class OpportunityResponse {
       dateTo: DateTime.parse(json['dateTo']),
       seats: json['seats'],
       status: json['status'],
+      organizationId: json['organizationId'],
     );
   }
 
@@ -38,6 +41,7 @@ class OpportunityResponse {
       'dateTo': dateTo.toIso8601String(),
       'seats': seats,
       'status': status,
+      'organizationId': organizationId,
     };
   }
 

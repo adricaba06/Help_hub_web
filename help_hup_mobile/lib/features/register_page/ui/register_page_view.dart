@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:help_hup_mobile/features/auth/bloc/auth_bloc.dart';
 import 'package:help_hup_mobile/features/register_page/bloc/register_page_bloc.dart';
 
 class RegisterPageView extends StatefulWidget {
@@ -75,6 +76,12 @@ class _RegisterPageViewState extends State<RegisterPageView> {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text('Registro exitoso')));
+          context.read<AuthBloc>().add(
+            AuthLoginRequested(
+              email: _emailController.text.trim(),
+              password: _passwordController.text.trim(),
+            ),
+          );
           Navigator.of(context).pop(true);
         }
       },

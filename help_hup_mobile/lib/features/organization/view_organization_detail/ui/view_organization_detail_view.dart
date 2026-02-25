@@ -3,7 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
 import 'package:help_hup_mobile/core/services/storage_service.dart';
 import 'package:help_hup_mobile/features/organization/edit_organization_form_page/ui/edit_organization_form_page.dart';
+import 'package:help_hup_mobile/features/organization/organization_list/ui/organization_list_manager_view.dart';
+import 'package:help_hup_mobile/features/organization/organization_opportunities/ui/organization_opportunities_view.dart';
 import 'package:help_hup_mobile/features/organization/view_organization_detail/bloc/view_organization_detail_bloc.dart';
+import 'package:help_hup_mobile/features/profile/ui/profile_screen.dart';
+import 'package:help_hup_mobile/widgets/app_bottom_nav_bar.dart';
 
 class ViewOrganizationDetailView extends StatelessWidget {
   final int organizationId;
@@ -30,7 +34,10 @@ class _ViewOrganizationDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8F7),
-      bottomNavigationBar: const _BottomNavBar(),
+      bottomNavigationBar: AppBottomNavBar(
+        currentIndex: 1,
+        onTap: (index) => _onBottomNavTap(context, index),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -338,7 +345,18 @@ class _ViewOrganizationDetailScreen extends StatelessWidget {
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              OrganizationOpportunitiesView(
+                                                organizationId: org.id,
+                                                organizationName: org.name,
+                                              ),
+                                        ),
+                                      );
+                                    },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF10B77F),
                                       foregroundColor: Colors.white,
@@ -421,6 +439,20 @@ class _ViewOrganizationDetailScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _onBottomNavTap(BuildContext context, int index) {
+    if (index == 0) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const OrganizationListManagerView()),
+      );
+      return;
+    }
+    if (index == 1) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const ProfileScreen()),
+      );
+    }
+  }
 }
 
 class TopNavigationBarIosStyle extends StatelessWidget {
@@ -499,70 +531,6 @@ class _StatItem extends StatelessWidget {
   }
 }
 
-class _BottomNavBar extends StatelessWidget {
-  const _BottomNavBar();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-      decoration: ShapeDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        shape: const RoundedRectangleBorder(
-          side: BorderSide(width: 1, color: Color(0x1910B77F)),
-        ),
-      ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _BottomItem(label: 'Explorar', icon: Icons.explore_outlined),
-          _BottomItem(label: 'Mensajes', icon: Icons.message_outlined),
-          _BottomItem(label: 'Favoritos', icon: Icons.favorite_outline),
-          _BottomItem(
-            label: 'Perfil',
-            icon: Icons.person_outline,
-            selected: true,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BottomItem extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool selected;
-
-  const _BottomItem({
-    required this.label,
-    required this.icon,
-    this.selected = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = selected ? const Color(0xFF10B77F) : const Color(0xFF94A3B8);
-    final weight = selected ? FontWeight.w700 : FontWeight.w500;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 20, color: color),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 10,
-            fontWeight: weight,
-            height: 1.5,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _AuthorizedNetworkImage extends StatelessWidget {
   final String url;
   final BoxFit fit;
@@ -604,3 +572,4 @@ class _AuthorizedNetworkImage extends StatelessWidget {
     );
   }
 }
+

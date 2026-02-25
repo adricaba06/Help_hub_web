@@ -7,6 +7,8 @@ import 'package:help_hup_mobile/core/models/organization/create_organization_req
 import 'package:help_hup_mobile/core/models/organization/edit_organization_request.dart';
 import 'package:help_hup_mobile/core/models/organization/organization_list_response.dart';
 import 'package:help_hup_mobile/core/models/organization/organization_response.dart';
+import 'package:help_hup_mobile/core/models/opportunity_filter.dart';
+import 'package:help_hup_mobile/core/models/opportunity_page_response.dart';
 import 'package:help_hup_mobile/core/services/session_service.dart';
 import 'package:help_hup_mobile/core/services/storage_service.dart';
 import 'package:http/http.dart' as http;
@@ -199,6 +201,53 @@ class OrganizationService implements CreateOrganizationInterface {
     } else {
       throw Exception('Error al obtener el detalle de la organizacion');
     }
+  }
+
+  Future<OpportunityPageResponse> getOpportunitiesByOrganizationId({
+    required int organizationId,
+    int page = 0,
+    int size = 8,
+    OpportunityFilter? filter,
+  }) async {
+    final headers = await _jsonHeaders();
+    final queryParams = <String, String>{
+      'page': '$page',
+      'size': '$size',
+      'sort': 'title,asc',
+      ...?filter?.toQueryParameters(),
+    };
+
+    final endpointCandidates = <String>[
+      '$_apiBaseUrl/opportunity/organizations/$organizationId/opportunities',
+      '$_apiBaseUrl/organizations/$organizationId/opportunities',
+      '$_apiBaseUrl/organization/$organizationId/opportunities',
+      '$_apiBaseUrl/opportunities/organization/$organizationId',
+    ];
+
+    String? lastError;
+    for (final endpoint in endpointCandidates) {
+      final uri = Uri.parse(
+        endpoint,
+      ).replace(queryParameters: queryParams);
+      final response = await http.get(uri, headers: headers);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return OpportunityPageResponse.fromJson(jsonDecode(response.body));
+      }
+      if (response.statusCode == 401) {
+        await _storageService.clear();
+        SessionService.instance.notifyUnauthorized();
+        throw Exception('Sesion expirada. Inicia sesion nuevamente.');
+      }
+
+      lastError =
+          'Error al obtener oportunidades (${response.statusCode}) en $endpoint: ${response.body}';
+      if (response.statusCode != 404) {
+        break;
+      }
+    }
+
+    throw Exception(lastError ?? 'Error al obtener oportunidades de la organizacion');
   }
 }
 
