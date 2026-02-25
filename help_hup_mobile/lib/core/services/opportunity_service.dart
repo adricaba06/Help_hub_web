@@ -3,10 +3,15 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
+import '../models/application_response.dart';
 import '../models/opportunity_detail_response.dart';
 import '../models/opportunity_response.dart';
+import 'session_service.dart';
+import 'storage_service.dart';
 
 class OpportunityService {
+  final StorageService _storage = StorageService();
+
   Future<List<OpportunityResponse>> searchOpportunities({
     String? query,
     String? city,
@@ -92,5 +97,52 @@ class OpportunityService {
       if (e is Exception) rethrow;
       throw Exception('Error de conexion: $e');
     }
+  }
+
+  Future<ApplicationResponse> applyToOpportunity({
+    required int opportunityId,
+    required String motivationText,
+  }) async {
+    final token = await _storage.getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception('NO_TOKEN');
+    }
+
+    final url = Uri.parse(
+      '${AppConfig.baseUrl}/api/opportunities/$opportunityId/apply',
+    );
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'motivationText': motivationText,
+      }),
+    );
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+      return ApplicationResponse.fromJson(jsonMap);
+    }
+
+    if (response.statusCode == 409) {
+      throw Exception('CONFLICT_${response.body}');
+    }
+
+    if (response.statusCode == 401) {
+      await _storage.clear();
+      SessionService.instance.notifyUnauthorized();
+      throw Exception('UNAUTHORIZED');
+    }
+
+    if (response.statusCode == 403) {
+      throw Exception('FORBIDDEN');
+    }
+
+    throw Exception('HTTP_${response.statusCode}_${response.body}');
   }
 }
