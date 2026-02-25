@@ -3,12 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:help_hup_mobile/core/models/organization/organization_response.dart';
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
 import 'package:help_hup_mobile/core/services/storage_service.dart';
-import 'package:help_hup_mobile/features/favourites/ui/list_favourite_screen.dart';
 import 'package:help_hup_mobile/features/organization/create_organization_form_page/ui/create_organization_form_page_view.dart';
 import 'package:help_hup_mobile/features/organization/delete_organization/bloc/delete_organization_bloc.dart';
 import 'package:help_hup_mobile/features/organization/organization_list/bloc/organization_list_page_bloc.dart';
 import 'package:help_hup_mobile/features/organization/view_organization_detail/ui/view_organization_detail_view.dart';
-import 'package:help_hup_mobile/features/opportunities/ui/opportunities_list_screen.dart';
+import 'package:help_hup_mobile/features/profile/ui/profile_screen.dart';
 import 'package:help_hup_mobile/widgets/app_bottom_nav_bar.dart';
 
 class OrganizationListManagerView extends StatelessWidget {
@@ -88,7 +87,7 @@ class _OrganizationListScreenState extends State<_OrganizationListScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         bottomNavigationBar: AppBottomNavBar(
-          currentIndex: 1,
+          currentIndex: 0,
           onTap: _onBottomNavTap,
         ),
         body: SafeArea(
@@ -217,17 +216,11 @@ class _OrganizationListScreenState extends State<_OrganizationListScreen> {
 
   void _onBottomNavTap(int index) {
     if (index == 0) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const OpportunitiesListScreen()),
-      );
       return;
     }
     if (index == 1) {
-      return;
-    }
-    if (index == 2) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const ListFavouriteScreen()),
+        MaterialPageRoute(builder: (_) => const ProfileScreen()),
       );
     }
   }
@@ -536,3 +529,4 @@ class _ErrorBlock extends StatelessWidget {
     );
   }
 }
+

@@ -16,42 +16,58 @@ class AppBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        final isManager =
-            state is AuthAuthenticated &&
-            state.user.role.trim().toLowerCase() == 'manager';
+        final role = state is AuthAuthenticated
+            ? state.user.role.trim().toUpperCase()
+            : '';
+        final isManager = role == 'MANAGER' || role == 'ROLE_MANAGER';
+        final effectiveIndex = isManager
+            ? (currentIndex == 1 || currentIndex == 3 ? 1 : 0)
+            : currentIndex;
+        final items = isManager
+            ? const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.apartment_outlined),
+                  activeIcon: Icon(Icons.apartment),
+                  label: 'Organizaciones',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline),
+                  activeIcon: Icon(Icons.person),
+                  label: 'Perfil',
+                ),
+              ]
+            : const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.explore_outlined),
+                  activeIcon: Icon(Icons.explore),
+                  label: 'Explorar',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.description_outlined),
+                  activeIcon: Icon(Icons.description),
+                  label: 'Solicitudes',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.favorite_outline),
+                  activeIcon: Icon(Icons.favorite),
+                  label: 'Favoritos',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline),
+                  activeIcon: Icon(Icons.person),
+                  label: 'Perfil',
+                ),
+              ];
 
         return BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          currentIndex: currentIndex,
+          currentIndex: effectiveIndex,
           onTap: onTap,
           selectedItemColor: const Color(0xFF10B77F),
           unselectedItemColor: const Color(0xFFA1A1AA),
           selectedFontSize: 12,
           unselectedFontSize: 12,
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(
-                isManager ? Icons.apartment_outlined : Icons.explore_outlined,
-              ),
-              activeIcon: Icon(isManager ? Icons.apartment : Icons.explore),
-              label: isManager ? 'Organizaciones' : 'Explorar',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.description_outlined),
-              activeIcon: Icon(Icons.description),
-              label: 'Solicitudes',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_outline),
-              activeIcon: Icon(Icons.favorite),
-              label: 'Favoritos',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Perfil',
-            ),
-          ],
+          items: items,
         );
       },
     );
