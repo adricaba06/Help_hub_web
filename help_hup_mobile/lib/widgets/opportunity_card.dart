@@ -133,23 +133,6 @@ class OpportunityCard extends StatelessWidget {
                 ),
               ),
               Positioned(
-                top: 14,
-                right: 14,
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.favorite_border,
-                    color: Color(0xFF334155),
-                    size: 20,
-                  ),
-                ),
-              ),
-              Positioned(
                 left: 16,
                 bottom: 16,
                 child: Container(

@@ -417,28 +417,40 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
                                 final opportunity = state.opportunities[index];
-                                final showFavoriteButton = _isUserRole(
+                                final canFavorite = _isUserRole(
                                   context.read<AuthBloc>().state,
-                                );
+                                ) && opportunity.isOpen;
+                                
                                 return InkWell(
+                                  borderRadius: BorderRadius.circular(16),
                                   onTap: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => ChangeNotifierProvider(
-                                          create: (_) => OpportunityDetailProvider(),
-                                          child: OpportunityDetailScreen(opportunityId: opportunity.id),
+                                          create: (_) =>
+                                              OpportunityDetailProvider(),
+                                          child: OpportunityDetailScreen(
+                                            opportunityId: opportunity.id,
+                                          ),
                                       ),
                                     ),
                                   );
                                 },
                                 child: OpportunityCard(
                                   opportunity: opportunity,
-                                  showFavoriteButton: showFavoriteButton,
-                                  isFavorite: _favoriteIds.contains(opportunity.id),
-                                  isFavoriteLoading: _favoriteUpdatingIds.contains(opportunity.id),
-                                  onFavoriteTap: showFavoriteButton ? () => _toggleFavorite(opportunity.id) : null,
-                                ),
+                                  showFavoriteButton: canFavorite,
+                                    isFavorite: _favoriteIds.contains(
+                                      opportunity.id,
+                                    ),
+                                    isFavoriteLoading:
+                                        _favoriteUpdatingIds.contains(
+                                          opportunity.id,
+                                        ),
+                                  onFavoriteTap: canFavorite
+                                      ? () => _toggleFavorite(opportunity.id)
+                                      : null,
+                                  ),
                               );
                               
                               },
