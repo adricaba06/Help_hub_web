@@ -25,7 +25,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     final hasToken = await storageService.isLoggedIn();
-    
+
     if (hasToken) {
       final user = await storageService.getUser();
       if (user != null) {
@@ -61,6 +61,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    final token = await storageService.getToken();
+
+    if (token != null && token.isNotEmpty) {
+      try {
+        await authService.logout(token);
+      } catch (_) {
+        // Local cleanup proceeds even when backend logout fails.
+      }
+    }
+
     await storageService.clear();
     emit(AuthUnauthenticated());
   }

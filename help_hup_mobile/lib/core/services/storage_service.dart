@@ -38,7 +38,6 @@ class StorageService {
     return token != null;
   }
 
-  // Borra todo al hacer logout
   Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
