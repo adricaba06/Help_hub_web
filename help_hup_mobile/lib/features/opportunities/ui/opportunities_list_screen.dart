@@ -9,6 +9,8 @@ import '../../auth/ui/login_screen.dart';
 import '../../favourites/ui/list_favourite_screen.dart';
 import '../../profile/ui/profile_screen.dart';
 import '../bloc/opportunity_bloc.dart';
+import '../provider/opportunity_detail_provider.dart';
+import 'opportunity_detail_screen.dart';
 
 class OpportunitiesListScreen extends StatefulWidget {
   const OpportunitiesListScreen({super.key});

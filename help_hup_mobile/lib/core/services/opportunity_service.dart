@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
+import '../models/opportunity_detail_response.dart';
 import '../models/opportunity_response.dart';
 
 class OpportunityService {
@@ -51,6 +52,37 @@ class OpportunityService {
         throw Exception('No autorizado. Por favor inicia sesión nuevamente.');
       } else if (response.statusCode == 404) {
         return [];
+      } else {
+        throw Exception(
+          'Error del servidor (${response.statusCode}): ${response.body}',
+        );
+      }
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Error de conexion: $e');
+    }
+  }
+
+  Future<OpportunityDetailResponse> getOpportunityDetail(int id) async {
+    try {
+      final token = await _storage.getToken();
+
+      final uri = Uri.parse('${AppConfig.baseUrl}/opportunity/$id');
+
+      final headers = <String, String>{'Content-Type': 'application/json'};
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(uri, headers: headers);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonMap = jsonDecode(response.body);
+        return OpportunityDetailResponse.fromJson(jsonMap);
+      } else if (response.statusCode == 401) {
+        await _storage.clear();
+        SessionService.instance.notifyUnauthorized();
+        throw Exception('Sesion expirada. Inicia sesion nuevamente.');
       } else {
         throw Exception(
           'Error del servidor (${response.statusCode}): ${response.body}',
