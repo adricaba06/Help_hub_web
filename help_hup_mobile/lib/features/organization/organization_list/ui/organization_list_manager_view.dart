@@ -3,10 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:help_hup_mobile/core/models/organization/organization_response.dart';
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
 import 'package:help_hup_mobile/core/services/storage_service.dart';
+import 'package:help_hup_mobile/features/favourites/ui/list_favourite_screen.dart';
 import 'package:help_hup_mobile/features/organization/create_organization_form_page/ui/create_organization_form_page_view.dart';
 import 'package:help_hup_mobile/features/organization/delete_organization/bloc/delete_organization_bloc.dart';
 import 'package:help_hup_mobile/features/organization/organization_list/bloc/organization_list_page_bloc.dart';
 import 'package:help_hup_mobile/features/organization/view_organization_detail/ui/view_organization_detail_view.dart';
+import 'package:help_hup_mobile/features/opportunities/ui/opportunities_list_screen.dart';
+import 'package:help_hup_mobile/widgets/app_bottom_nav_bar.dart';
 
 class OrganizationListManagerView extends StatelessWidget {
   const OrganizationListManagerView({super.key});
@@ -84,6 +87,10 @@ class _OrganizationListScreenState extends State<_OrganizationListScreen> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
+        bottomNavigationBar: AppBottomNavBar(
+          currentIndex: 1,
+          onTap: _onBottomNavTap,
+        ),
         body: SafeArea(
           child: Column(
             children: [
@@ -201,12 +208,28 @@ class _OrganizationListScreenState extends State<_OrganizationListScreen> {
                       },
                     ),
               ),
-              const _BottomNavMock(),
             ],
           ),
         ),
       ),
     );
+  }
+
+  void _onBottomNavTap(int index) {
+    if (index == 0) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const OpportunitiesListScreen()),
+      );
+      return;
+    }
+    if (index == 1) {
+      return;
+    }
+    if (index == 2) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const ListFavouriteScreen()),
+      );
+    }
   }
 }
 
@@ -380,7 +403,7 @@ class _OrganizationCard extends StatelessWidget {
                 ],
               ),
             ),
-            ElevatedButton(
+            TextButton(
               onPressed: () async {
                 final deleteBloc = context.read<DeleteOrganizationBloc>();
                 final shouldDelete = await showDialog<bool>(
@@ -418,7 +441,10 @@ class _OrganizationCard extends StatelessWidget {
                   );
                 }
               },
-              child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+              child: const Text(
+                'Eliminar',
+                style: TextStyle(color: Colors.red),
+              ),
             ),
           ],
         ),
@@ -426,33 +452,6 @@ class _OrganizationCard extends StatelessWidget {
     );
   }
 }
-class _BottomNavMock extends StatelessWidget {
-  const _BottomNavMock();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
-      ),
-      child: const Row(
-        children: [
-          _NavItem(label: 'Explorar', icon: Icons.explore_outlined),
-          _NavItem(
-            label: 'Solicitudes',
-            icon: Icons.description_outlined,
-            selected: true,
-          ),
-          _NavItem(label: 'Favoritos', icon: Icons.favorite_border),
-          _NavItem(label: 'Perfil', icon: Icons.person_outline),
-        ],
-      ),
-    );
-  }
-}
-
 class _OrganizationImage extends StatelessWidget {
   final String? imageUrl;
 
@@ -507,32 +506,6 @@ class _OrganizationImage extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool selected;
-
-  const _NavItem({
-    required this.label,
-    required this.icon,
-    this.selected = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = selected ? const Color(0xFF10B77F) : const Color(0xFF64748B);
-    return Expanded(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color),
-          Text(label, style: TextStyle(color: color, fontSize: 10)),
-        ],
-      ),
     );
   }
 }

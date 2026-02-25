@@ -33,7 +33,7 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   http: ^1.6.0
-  image_picker: ^0.8.7+3
+  image_picker: ^1.2.1
   flutter_bloc: ^9.1.1
   provider: ^6.1.1
   shared_preferences: ^2.2.2
