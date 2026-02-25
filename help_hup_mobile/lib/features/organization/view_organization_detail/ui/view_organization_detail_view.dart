@@ -8,6 +8,7 @@ import 'package:help_hup_mobile/features/organization/organization_list/ui/organ
 import 'package:help_hup_mobile/features/organization/organization_opportunities/ui/organization_opportunities_view.dart';
 import 'package:help_hup_mobile/features/organization/view_organization_detail/bloc/view_organization_detail_bloc.dart';
 import 'package:help_hup_mobile/features/opportunities/ui/opportunities_list_screen.dart';
+import 'package:help_hup_mobile/features/settings/ui/settings_screen.dart';
 import 'package:help_hup_mobile/widgets/app_bottom_nav_bar.dart';
 
 class ViewOrganizationDetailView extends StatelessWidget {
@@ -458,6 +459,13 @@ class _ViewOrganizationDetailScreen extends StatelessWidget {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const ListFavouriteScreen()),
       );
+      return;
+    }
+
+    if (index == 3) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const SettingsScreen()),
+      );
     }
   }
 }
@@ -579,3 +587,4 @@ class _AuthorizedNetworkImage extends StatelessWidget {
     );
   }
 }
+

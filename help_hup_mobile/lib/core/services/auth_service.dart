@@ -21,4 +21,24 @@ class AuthService {
       throw Exception('Error del servidor (${response.statusCode}).');
     }
   }
+
+  Future<void> logout(String token) async {
+    final response = await http.post(
+      Uri.parse(AppConfig.logoutUrl),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return;
+    }
+
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      return;
+    }
+
+    throw Exception('No se pudo cerrar sesi\u00f3n (${response.statusCode}).');
+  }
 }

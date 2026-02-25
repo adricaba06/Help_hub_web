@@ -37,6 +37,7 @@ class HelpHubApp extends StatefulWidget {
 class _HelpHubAppState extends State<HelpHubApp> {
   late final AuthBloc _authBloc;
   late final StreamSubscription<void> _unauthorizedSub;
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -64,6 +65,20 @@ class _HelpHubAppState extends State<HelpHubApp> {
       child: MaterialApp(
         title: 'HelpHub',
         debugShowCheckedModeBanner: false,
+        navigatorKey: _navigatorKey,
+        builder: (context, child) {
+          return BlocListener<AuthBloc, AuthState>(
+            listener: (context, state) {
+              if (state is AuthUnauthenticated) {
+                _navigatorKey.currentState?.pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
+              }
+            },
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
             seedColor: const Color(0xFF10B77F),

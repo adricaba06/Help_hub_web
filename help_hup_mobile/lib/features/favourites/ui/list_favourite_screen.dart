@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/models/opportunity_response.dart';
 import '../../../core/services/favorite_opportunity_service.dart';
 import '../../../widgets/app_bottom_nav_bar.dart';
 import '../../../widgets/opportunity_card.dart';
-import '../../auth/bloc/auth_bloc.dart';
 import '../../opportunities/ui/opportunities_list_screen.dart';
+import '../../settings/ui/settings_screen.dart';
 
 class ListFavouriteScreen extends StatefulWidget {
 	const ListFavouriteScreen({super.key});
@@ -35,6 +34,13 @@ class _ListFavouriteScreenState extends State<ListFavouriteScreen> {
 			Navigator.of(context).pushReplacement(
 				MaterialPageRoute(builder: (_) => const OpportunitiesListScreen()),
 			);
+			return;
+		}
+
+		if (index == 3) {
+			Navigator.of(context).pushReplacement(
+				MaterialPageRoute(builder: (_) => const SettingsScreen()),
+			);
 		}
 	}
 
@@ -60,14 +66,7 @@ class _ListFavouriteScreenState extends State<ListFavouriteScreen> {
 											letterSpacing: -0.5,
 										),
 									),
-									IconButton(
-										icon: const Icon(Icons.logout_outlined,
-												color: Color(0xFF52525B)),
-										onPressed: () {
-											context.read<AuthBloc>().add(AuthLogoutRequested());
-										},
-										tooltip: 'Cerrar sesión',
-									),
+									const SizedBox(width: 40),
 								],
 							),
 						),
@@ -167,4 +166,5 @@ class _ListFavouriteScreenState extends State<ListFavouriteScreen> {
 		);
 	}
 }
+
 

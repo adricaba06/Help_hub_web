@@ -61,6 +61,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    final token = await storageService.getToken();
+
+    if (token != null && token.isNotEmpty) {
+      try {
+        await authService.logout(token);
+      } catch (_) {
+        // The local session is cleared even if backend logout fails.
+      }
+    }
+
     await storageService.clear();
     emit(AuthUnauthenticated());
   }

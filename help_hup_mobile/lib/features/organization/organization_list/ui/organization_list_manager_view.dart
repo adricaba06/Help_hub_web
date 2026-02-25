@@ -9,6 +9,7 @@ import 'package:help_hup_mobile/features/organization/delete_organization/bloc/d
 import 'package:help_hup_mobile/features/organization/organization_list/bloc/organization_list_page_bloc.dart';
 import 'package:help_hup_mobile/features/organization/view_organization_detail/ui/view_organization_detail_view.dart';
 import 'package:help_hup_mobile/features/opportunities/ui/opportunities_list_screen.dart';
+import 'package:help_hup_mobile/features/settings/ui/settings_screen.dart';
 import 'package:help_hup_mobile/widgets/app_bottom_nav_bar.dart';
 
 class OrganizationListManagerView extends StatelessWidget {
@@ -228,6 +229,13 @@ class _OrganizationListScreenState extends State<_OrganizationListScreen> {
     if (index == 2) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const ListFavouriteScreen()),
+      );
+      return;
+    }
+
+    if (index == 3) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const SettingsScreen()),
       );
     }
   }
@@ -536,3 +544,4 @@ class _ErrorBlock extends StatelessWidget {
     );
   }
 }
+

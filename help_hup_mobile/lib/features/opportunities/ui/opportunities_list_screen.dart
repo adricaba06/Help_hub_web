@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../widgets/app_bottom_nav_bar.dart';
 import '../../../widgets/opportunity_card.dart';
-import '../../auth/bloc/auth_bloc.dart';
 import '../../favourites/ui/list_favourite_screen.dart';
+import '../../settings/ui/settings_screen.dart';
 import '../bloc/opportunity_bloc.dart';
 
 class OpportunitiesListScreen extends StatefulWidget {
@@ -59,6 +59,13 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const ListFavouriteScreen()),
       );
+      return;
+    }
+
+    if (index == 3) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const SettingsScreen()),
+      );
     }
   }
 
@@ -88,13 +95,7 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                       letterSpacing: -0.5,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.logout_outlined, color: Color(0xFF52525B)),
-                    onPressed: () {
-                      context.read<AuthBloc>().add(AuthLogoutRequested());
-                    },
-                    tooltip: 'Cerrar sesión',
-                  ),
+                  const SizedBox(width: 40),
                 ],
               ),
             ),
@@ -451,3 +452,5 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
     );
   }
 }
+
+
