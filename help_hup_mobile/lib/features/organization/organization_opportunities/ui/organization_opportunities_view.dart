@@ -350,80 +350,104 @@ class _OrganizationOpportunitiesScreenState
               ),
             ),
             Expanded(
-              child: BlocBuilder<OrganizationOpportunitiesBloc, OrganizationOpportunitiesState>(
-                builder: (context, state) {
-                  if (state is OrganizationOpportunitiesInitial ||
-                      state is OrganizationOpportunitiesLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+              child:
+                  BlocBuilder<
+                    OrganizationOpportunitiesBloc,
+                    OrganizationOpportunitiesState
+                  >(
+                    builder: (context, state) {
+                      if (state is OrganizationOpportunitiesInitial ||
+                          state is OrganizationOpportunitiesLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                  if (state is OrganizationOpportunitiesError) {
-                    return _ErrorBlock(
-                      message: state.error.replaceFirst('Exception: ', ''),
-                      onRetry: () {
-                        context.read<OrganizationOpportunitiesBloc>().add(
-                          const LoadOrganizationOpportunities(),
+                      if (state is OrganizationOpportunitiesError) {
+                        return _ErrorBlock(
+                          message: state.error.replaceFirst('Exception: ', ''),
+                          onRetry: () {
+                            context.read<OrganizationOpportunitiesBloc>().add(
+                              const LoadOrganizationOpportunities(),
+                            );
+                          },
                         );
-                      },
-                    );
-                  }
+                      }
 
-                  if (state is OrganizationOpportunitiesLoaded) {
-                    _ensureScrollableContent(state);
+                      if (state is OrganizationOpportunitiesLoaded) {
+                        _ensureScrollableContent(state);
 
-                    return RefreshIndicator(
-                      onRefresh: () async {
-                        context.read<OrganizationOpportunitiesBloc>().add(
-                          const RefreshOrganizationOpportunities(),
-                        );
-                      },
-                      child: CustomScrollView(
-                        controller: _scrollController,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                              child: _StatsCard(total: state.totalElements),
-                            ),
-                          ),
-                          if (state.opportunities.isEmpty)
-                            const SliverToBoxAdapter(
-                              child: Padding(
-                                padding: EdgeInsets.fromLTRB(16, 16, 16, 24),
-                                child: _EmptyBlock(),
-                              ),
-                            )
-                          else
-                            SliverPadding(
-                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-                              sliver: SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: _OpportunityListCard(
-                                      opportunity: state.opportunities[index],
-                                    ),
+                        return RefreshIndicator(
+                          onRefresh: () async {
+                            context.read<OrganizationOpportunitiesBloc>().add(
+                              const RefreshOrganizationOpportunities(),
+                            );
+                          },
+                          child: CustomScrollView(
+                            controller: _scrollController,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            slivers: [
+                              SliverToBoxAdapter(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    4,
+                                    16,
+                                    0,
                                   ),
-                                  childCount: state.opportunities.length,
+                                  child: _StatsCard(total: state.totalElements),
                                 ),
                               ),
-                            ),
-                          if (state.isLoadingMore)
-                            const SliverToBoxAdapter(
-                              child: Padding(
-                                padding: EdgeInsets.only(bottom: 20),
-                                child: Center(child: CircularProgressIndicator()),
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
-                  }
+                              if (state.opportunities.isEmpty)
+                                const SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: EdgeInsets.fromLTRB(
+                                      16,
+                                      16,
+                                      16,
+                                      24,
+                                    ),
+                                    child: _EmptyBlock(),
+                                  ),
+                                )
+                              else
+                                SliverPadding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    16,
+                                    16,
+                                    20,
+                                  ),
+                                  sliver: SliverList(
+                                    delegate: SliverChildBuilderDelegate(
+                                      (context, index) => Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 12,
+                                        ),
+                                        child: _OpportunityListCard(
+                                          opportunity:
+                                              state.opportunities[index],
+                                        ),
+                                      ),
+                                      childCount: state.opportunities.length,
+                                    ),
+                                  ),
+                                ),
+                              if (state.isLoadingMore)
+                                const SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(bottom: 20),
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      }
 
-                  return const SizedBox.shrink();
-                },
-              ),
+                      return const SizedBox.shrink();
+                    },
+                  ),
             ),
           ],
         ),
@@ -450,11 +474,7 @@ class _OrganizationOpportunitiesScreenState
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 16,
-              color: Colors.white,
-            ),
+            Icon(icon, size: 16, color: Colors.white),
             const SizedBox(width: 6),
             Text(
               label,
@@ -476,11 +496,7 @@ class _OrganizationOpportunitiesScreenState
               const SizedBox(width: 4),
               GestureDetector(
                 onTap: onClear,
-                child: const Icon(
-                  Icons.close,
-                  size: 16,
-                  color: Colors.white,
-                ),
+                child: const Icon(Icons.close, size: 16, color: Colors.white),
               ),
             ],
           ],
@@ -568,7 +584,10 @@ class _OpportunityListCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: opportunity.isOpen
                       ? const Color(0x1A10B77F)
@@ -603,12 +622,19 @@ class _OpportunityListCard extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(Icons.location_on_outlined, size: 16, color: Color(0xFF64748B)),
+              const Icon(
+                Icons.location_on_outlined,
+                size: 16,
+                color: Color(0xFF64748B),
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   opportunity.city,
-                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                  style: const TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ],
@@ -616,7 +642,11 @@ class _OpportunityListCard extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.calendar_today_outlined, size: 15, color: Color(0xFF64748B)),
+              const Icon(
+                Icons.calendar_today_outlined,
+                size: 15,
+                color: Color(0xFF64748B),
+              ),
               const SizedBox(width: 4),
               Text(
                 _formatDateRange(),
@@ -655,11 +685,7 @@ class _EmptyBlock extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.inbox_outlined,
-              color: Color(0xFF94A3B8),
-              size: 28,
-            ),
+            Icon(Icons.inbox_outlined, color: Color(0xFF94A3B8), size: 28),
             SizedBox(height: 8),
             Text(
               'No hay oportunidades',
@@ -696,10 +722,7 @@ class _ErrorBlock extends StatelessWidget {
               style: const TextStyle(color: Color(0xFF475569)),
             ),
             const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: onRetry,
-              child: const Text('Reintentar'),
-            ),
+            ElevatedButton(onPressed: onRetry, child: const Text('Reintentar')),
           ],
         ),
       ),

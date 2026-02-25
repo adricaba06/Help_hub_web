@@ -8,6 +8,9 @@ class OpportunityDetailProvider extends ChangeNotifier {
   OpportunityDetailResponse? detail;
   bool isLoading = false;
   String? errorMessage;
+  bool applying = false;
+  String? applyError;
+  bool appliedOk = false;
 
   Future<void> load(int id) async {
     isLoading = true;
@@ -21,6 +24,28 @@ class OpportunityDetailProvider extends ChangeNotifier {
       detail = null;
     } finally {
       isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<Object?> apply(int opportunityId, String motivation) async {
+    applying = true;
+    applyError = null;
+    appliedOk = false;
+    notifyListeners();
+
+    try {
+      final res = await _service.applyToOpportunity(
+        opportunityId: opportunityId,
+        motivationText: motivation.trim(),
+      );
+      appliedOk = true;
+      return res;
+    } catch (e) {
+      applyError = e.toString();
+      return null;
+    } finally {
+      applying = false;
       notifyListeners();
     }
   }

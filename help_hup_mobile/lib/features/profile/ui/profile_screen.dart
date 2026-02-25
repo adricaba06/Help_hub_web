@@ -5,7 +5,9 @@ import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/ui/login_screen.dart';
 import '../../favourites/ui/list_favourite_screen.dart';
 import '../../opportunities/ui/opportunities_list_screen.dart';
+import '../../organization/organization_list/ui/organization_list_manager_view.dart';
 import '../bloc/profile_bloc.dart';
+import '../../profile_edit/ui/profile_edit_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -41,6 +43,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
     final isAuthenticated = authState is AuthAuthenticated;
+    final isManager = authState is AuthAuthenticated &&
+        (authState.user.role.trim().toUpperCase() == 'MANAGER' ||
+            authState.user.role.trim().toUpperCase() == 'ROLE_MANAGER');
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8F7),
@@ -69,13 +74,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
       bottomNavigationBar: AppBottomNavBar(
-        currentIndex: 3,
+        currentIndex: isManager ? 1 : 3,
         onTap: (index) {
           if (index == 0) {
+            if (isManager) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const OrganizationListManagerView()),
+              );
+              return;
+            }
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (_) => const OpportunitiesListScreen()),
             );
-          } else if (index == 2) {
+          } else if (!isManager && index == 2) {
             final authState = context.read<AuthBloc>().state;
             if (authState is AuthAuthenticated) {
               Navigator.of(context).pushReplacement(
@@ -309,13 +320,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _ActionButton(
                   label: 'Editar Perfil',
                   icon: Icons.edit,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ProfileEditScreen(user: user),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 10),
                 _ActionButton(
                   label: 'Cambiar contraseña',
                   icon: Icons.edit,
                   onTap: () {},
+                ),
+                const SizedBox(height: 10),
+                _ActionButton(
+                  label: 'Cerrar sesión',
+                  icon: Icons.logout,
+                  backgroundColor: const Color(0xFFB42318),
+                  onTap: () {
+                    context.read<AuthBloc>().add(AuthLogoutRequested());
+                  },
                 ),
               ],
             ),
@@ -331,14 +357,12 @@ class _ActionButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final Color backgroundColor;
-  final Color foregroundColor;
 
   const _ActionButton({
     required this.label,
     required this.icon,
     required this.onTap,
     this.backgroundColor = const Color(0xFF10B77F),
-    this.foregroundColor = Colors.white,
   });
 
   @override
@@ -351,7 +375,7 @@ class _ActionButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           elevation: 0,
           backgroundColor: backgroundColor,
-          foregroundColor: foregroundColor,
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),

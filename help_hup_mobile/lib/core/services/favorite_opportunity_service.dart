@@ -73,7 +73,10 @@ class FavoriteOpportunityService {
 
     if (response.statusCode == 200 ||
         response.statusCode == 201 ||
-        response.statusCode == 204) {
+        response.statusCode == 204 ||
+        response.statusCode == 409) {
+      // Treat conflicts as success so the operation is idempotent:
+      // if it is already favorite, desired state is already achieved.
       return;
     }
 
@@ -100,7 +103,11 @@ class FavoriteOpportunityService {
       },
     );
 
-    if (response.statusCode == 200 || response.statusCode == 204) {
+    if (response.statusCode == 200 ||
+        response.statusCode == 204 ||
+        response.statusCode == 404) {
+      // Treat not-found as success so the operation is idempotent:
+      // if it is already removed, desired state is already achieved.
       return;
     }
 

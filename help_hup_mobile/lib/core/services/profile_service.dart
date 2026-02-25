@@ -44,4 +44,33 @@ class ProfileService {
 
     throw Exception('Error al cargar perfil (${response.statusCode}).');
   }
+
+  Future<UserResponse> editProfile({required String newName}) async {
+    final token = await _storage.getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception('No hay sesión activa.');
+    }
+
+    final response = await http.put(
+      Uri.parse(AppConfig.editProfileUrl),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'displayName': newName,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final user = UserResponse.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+      await _storage.saveUser(user);
+      return user;
+    }
+
+    throw Exception('Error al actualizar el perfil (${response.statusCode}).');
+  }
 }

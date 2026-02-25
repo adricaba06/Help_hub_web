@@ -22,6 +22,101 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
     });
   }
 
+  Future<void> _showApplyDialog(int opportunityId) async {
+    final formKey = GlobalKey<FormState>();
+    final controller = TextEditingController();
+
+    final provider = context.read<OpportunityDetailProvider>();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text('Enviar solicitud'),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: controller,
+              maxLines: 6,
+              decoration: const InputDecoration(
+                labelText: 'Motivación',
+                hintText: 'Cuéntanos por qué quieres participar…',
+                border: OutlineInputBorder(),
+              ),
+              validator: (v) {
+                final txt = (v ?? '').trim();
+                if (txt.isEmpty) return 'La motivación es obligatoria';
+                if (txt.length < 10) return 'Mínimo 10 caracteres';
+                return null;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            Consumer<OpportunityDetailProvider>(
+              builder: (_, p, __) {
+                return FilledButton(
+                  onPressed: p.applying
+                      ? null
+                      : () async {
+                          if (!formKey.currentState!.validate()) return;
+
+                          final res = await provider.apply(
+                            opportunityId,
+                            controller.text,
+                          );
+
+                          if (res != null) {
+                            Navigator.pop(context, true);
+                          } else {
+                            // El dialog se mantiene abierto y el error se maneja fuera.
+                          }
+                        },
+                  child: p.applying
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Enviar'),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+
+    if (result == true) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Solicitud enviada')),
+      );
+    } else {
+      final err = provider.applyError;
+      if (err != null && mounted) {
+        var msg = 'Error al enviar solicitud';
+
+        if (err.contains('NO_TOKEN') || err.contains('UNAUTHORIZED')) {
+          msg = 'Tienes que iniciar sesión';
+        } else if (err.contains('FORBIDDEN')) {
+          msg = 'No tienes permisos (rol incorrecto)';
+        } else if (err.contains('CONFLICT')) {
+          msg = 'Ya has aplicado a esta oportunidad o no está disponible';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg)),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,14 +211,12 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
 
                 const SizedBox(height: 20),
 
-                // Botón solicitar (voluntario que puede aplicar)
+                // Botón solicitar (solo mostrar; la acción real es FEAT-003)
                 if (detail.canApply)
                   ElevatedButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content:
-                                Text('TODO: Enviar solicitud (feat-003)')),
+                        const SnackBar(content: Text('TODO: Aplicar (feat-003)')),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -131,9 +224,10 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                    child: const Text('Enviar solicitud'),
+                    child: const Text('Aplicar'),
                   ),
 
                 // Ver solicitud propia (ya aplicó)

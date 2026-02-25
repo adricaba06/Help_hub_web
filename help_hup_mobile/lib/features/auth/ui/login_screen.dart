@@ -2,6 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:help_hup_mobile/core/services/UserService.dart';
+import 'package:help_hup_mobile/features/opportunities/ui/opportunities_list_screen.dart';
+import 'package:help_hup_mobile/features/organization/organization_list/ui/organization_list_manager_view.dart';
 import 'package:help_hup_mobile/features/register_page/ui/register_page_view.dart';
 import 'package:help_hup_mobile/features/register_page/bloc/register_page_bloc.dart';
 import '../bloc/auth_bloc.dart';
@@ -61,8 +63,19 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is AuthAuthenticated && Navigator.of(context).canPop()) {
-          Navigator.of(context).pop(true);
+        if (state is AuthAuthenticated) {
+          final role = state.user.role.trim().toUpperCase();
+          final goToManager =
+              role == 'MANAGER' || role == 'ROLE_MANAGER';
+
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => goToManager
+                  ? const OrganizationListManagerView()
+                  : const OpportunitiesListScreen(),
+            ),
+            (route) => false,
+          );
         }
       },
       builder: (context, state) {
