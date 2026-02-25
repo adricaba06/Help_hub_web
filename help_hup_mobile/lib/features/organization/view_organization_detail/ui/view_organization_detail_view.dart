@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
 import 'package:help_hup_mobile/core/services/storage_service.dart';
-import 'package:help_hup_mobile/features/favourites/ui/list_favourite_screen.dart';
 import 'package:help_hup_mobile/features/organization/edit_organization_form_page/ui/edit_organization_form_page.dart';
 import 'package:help_hup_mobile/features/organization/organization_list/ui/organization_list_manager_view.dart';
 import 'package:help_hup_mobile/features/organization/organization_opportunities/ui/organization_opportunities_view.dart';
 import 'package:help_hup_mobile/features/organization/view_organization_detail/bloc/view_organization_detail_bloc.dart';
-import 'package:help_hup_mobile/features/opportunities/ui/opportunities_list_screen.dart';
-import 'package:help_hup_mobile/features/settings/ui/settings_screen.dart';
+import 'package:help_hup_mobile/features/profile/ui/profile_screen.dart';
 import 'package:help_hup_mobile/widgets/app_bottom_nav_bar.dart';
 
 class ViewOrganizationDetailView extends StatelessWidget {
@@ -37,7 +35,7 @@ class _ViewOrganizationDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8F7),
       bottomNavigationBar: AppBottomNavBar(
-        currentIndex: 3,
+        currentIndex: 1,
         onTap: (index) => _onBottomNavTap(context, index),
       ),
       body: SafeArea(
@@ -445,26 +443,13 @@ class _ViewOrganizationDetailScreen extends StatelessWidget {
   void _onBottomNavTap(BuildContext context, int index) {
     if (index == 0) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const OpportunitiesListScreen()),
+        MaterialPageRoute(builder: (_) => const OrganizationListManagerView()),
       );
       return;
     }
     if (index == 1) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const OrganizationListManagerView()),
-      );
-      return;
-    }
-    if (index == 2) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const ListFavouriteScreen()),
-      );
-      return;
-    }
-
-    if (index == 3) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const SettingsScreen()),
+        MaterialPageRoute(builder: (_) => const ProfileScreen()),
       );
     }
   }

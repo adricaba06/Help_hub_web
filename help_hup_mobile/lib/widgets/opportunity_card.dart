@@ -6,10 +6,18 @@ import '../core/models/opportunity_response.dart';
 
 class OpportunityCard extends StatelessWidget {
   final OpportunityResponse opportunity;
+  final bool showFavoriteButton;
+  final bool isFavorite;
+  final bool isFavoriteLoading;
+  final VoidCallback? onFavoriteTap;
 
   const OpportunityCard({
     super.key,
     required this.opportunity,
+    this.showFavoriteButton = false,
+    this.isFavorite = false,
+    this.isFavoriteLoading = false,
+    this.onFavoriteTap,
   });
 
   String _formatDateRange() {
@@ -163,6 +171,41 @@ class OpportunityCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (showFavoriteButton)
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Material(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    shape: const CircleBorder(),
+                    elevation: 2,
+                    child: IconButton(
+                      onPressed:
+                          isFavoriteLoading || onFavoriteTap == null
+                              ? null
+                              : onFavoriteTap,
+                      icon:
+                          isFavoriteLoading
+                              ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                              : Icon(
+                                isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: isFavorite
+                                    ? const Color(0xFFEF4444)
+                                    : const Color(0xFF71717A),
+                              ),
+                      tooltip:
+                          isFavorite
+                              ? 'Quitar de favoritos'
+                              : 'Agregar a favoritos',
+                    ),
+                  ),
+                ),
             ],
           ),
           Padding(
