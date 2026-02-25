@@ -73,4 +73,41 @@ class ProfileService {
 
     throw Exception('Error al actualizar el perfil (${response.statusCode}).');
   }
+
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final token = await _storage.getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception('No hay sesion activa.');
+    }
+
+    final response = await http.post(
+      Uri.parse(AppConfig.changePasswordUrl),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'oldPassword': oldPassword,
+        'newPassword': newPassword,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return;
+    }
+
+    if (response.statusCode == 400) {
+      throw Exception('La contrasena actual no es valida.');
+    }
+
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      throw Exception('Sesion expirada. Inicia sesion de nuevo.');
+    }
+
+    throw Exception('Error al cambiar la contrasena (${response.statusCode}).');
+  }
 }

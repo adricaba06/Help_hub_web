@@ -4,6 +4,7 @@ import '../../../widgets/app_bottom_nav_bar.dart';
 import '../../applications/ui/applications_list_screen.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/ui/login_screen.dart';
+import '../../change_password/ui/change_password_screen.dart';
 import '../../favourites/ui/list_favourite_screen.dart';
 import '../../opportunities/ui/opportunities_list_screen.dart';
 import '../../organization/organization_list/ui/organization_list_manager_view.dart';
@@ -344,7 +345,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _ActionButton(
                   label: 'Cambiar contraseña',
                   icon: Icons.edit,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ChangePasswordScreen(),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 10),
                 _ActionButton(
