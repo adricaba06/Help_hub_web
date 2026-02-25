@@ -424,24 +424,23 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                                   onTap: () {
                                     Navigator.push(
                                       context,
-                                    MaterialPageRoute(
-                                      builder: (_) => ChangeNotifierProvider(
-                                        create: (_) => OpportunityDetailProvider(),
-                                        child: OpportunityDetailScreen(opportunityId: opportunity.id),
+                                      MaterialPageRoute(
+                                        builder: (_) => ChangeNotifierProvider(
+                                          create: (_) => OpportunityDetailProvider(),
+                                          child: OpportunityDetailScreen(opportunityId: opportunity.id),
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
-                            child: OpportunityCard(
-                              opportunity: opportunity,
-                              showFavoriteButton: showFavoriteButton,
-                              isFavorite: _favoriteIds.contains(opportunity.id),
-                              isFavoriteLoading: _favoriteUpdatingIds.contains(opportunity.id),
-                              onFavoriteTap: showFavoriteButton
-                                ? () => _toggleFavorite(opportunity.id)
-                                : null,
-                          ),
-                        );
+                                  );
+                                },
+                                child: OpportunityCard(
+                                  opportunity: opportunity,
+                                  showFavoriteButton: showFavoriteButton,
+                                  isFavorite: _favoriteIds.contains(opportunity.id),
+                                  isFavoriteLoading: _favoriteUpdatingIds.contains(opportunity.id),
+                                  onFavoriteTap: showFavoriteButton ? () => _toggleFavorite(opportunity.id) : null,
+                                ),
+                              );
+                              
                               },
                               childCount: state.opportunities.length,
                             ),
