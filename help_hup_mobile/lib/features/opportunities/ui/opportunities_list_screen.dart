@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:help_hup_mobile/features/opportunities/provider/opportunity_detail_provider.dart';
+import 'package:help_hup_mobile/features/opportunities/ui/opportunity_detail_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../core/services/favorite_opportunity_service.dart';
 import '../../../widgets/app_bottom_nav_bar.dart';
@@ -11,8 +13,6 @@ import '../../applications/ui/applications_list_screen.dart';
 import '../../favourites/ui/list_favourite_screen.dart';
 import '../../profile/ui/profile_screen.dart';
 import '../bloc/opportunity_bloc.dart';
-import '../provider/opportunity_detail_provider.dart';
-import 'opportunity_detail_screen.dart';
 
 class OpportunitiesListScreen extends StatefulWidget {
   const OpportunitiesListScreen({super.key});

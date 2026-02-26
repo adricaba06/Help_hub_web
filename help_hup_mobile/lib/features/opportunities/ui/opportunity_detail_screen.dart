@@ -22,7 +22,6 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,12 +116,12 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
 
                 const SizedBox(height: 20),
 
-                // Botón solicitar (solo mostrar; la acción real es FEAT-003)
+                // Botón solicitar (voluntario que puede aplicar)
                 if (detail.canApply)
                   ElevatedButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('TODO: Aplicar (feat-003)')),
+                        const SnackBar(content: Text('Aplicar a oportunidad (feat-003)')),
                       );
                     },
                     style: ElevatedButton.styleFrom(
