@@ -19,13 +19,9 @@ import 'features/profile/bloc/profile_bloc.dart';
 import 'widgets/splash_screen.dart';
 
 void main() async {
-  // Ensure Flutter engine is initialized before any plugin calls
   WidgetsFlutterBinding.ensureInitialized();
-  // Pre-warm SharedPreferences so the first frame has no async wait
   await SharedPreferences.getInstance();
-  // Initialize date formatting for Spanish locale
   await initializeDateFormatting('es', null);
-  // Configure BLoC observer for global logging
   Bloc.observer = AppBlocObserver();
   runApp(const HelpHubApp());
 }

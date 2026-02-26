@@ -7,6 +7,8 @@ import 'package:help_hup_mobile/core/models/opportunity_response.dart';
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
 import 'package:help_hup_mobile/features/opportunity/create_opportunity_form_page/ui/create_opportunity_form_page_view.dart';
 import 'package:help_hup_mobile/features/organization/organization_opportunities/bloc/organization_opportunities_bloc.dart';
+import 'package:help_hup_mobile/features/applications/ui/opportunity_applications_section.dart';
+import 'package:help_hup_mobile/features/auth/bloc/auth_bloc.dart';
 import 'package:intl/intl.dart';
 
 class OrganizationOpportunitiesView extends StatelessWidget {
@@ -461,8 +463,15 @@ class _OrganizationOpportunitiesScreenState
                                           bottom: 12,
                                         ),
                                         child: _OpportunityListCard(
-                                          opportunity:
-                                              state.opportunities[index],
+                                          opportunity: state.opportunities[index],
+                                          // determine if the current user is manager
+                                          isManager: context.read<AuthBloc>().state is AuthAuthenticated &&
+                                              (context.read<AuthBloc>().state as AuthAuthenticated)
+                                                      .user
+                                                      .role
+                                                      .trim()
+                                                      .toUpperCase() ==
+                                                  'MANAGER',
                                         ),
                                       ),
                                       childCount: state.opportunities.length,
@@ -590,118 +599,149 @@ class _StatsCard extends StatelessWidget {
   }
 }
 
-class _OpportunityListCard extends StatelessWidget {
+class _OpportunityListCard extends StatefulWidget {
   final OpportunityResponse opportunity;
+  final bool isManager;
 
-  const _OpportunityListCard({required this.opportunity});
+  const _OpportunityListCard({
+    required this.opportunity,
+    required this.isManager,
+  });
+
+  @override
+  State<_OpportunityListCard> createState() => _OpportunityListCardState();
+}
+
+class _OpportunityListCardState extends State<_OpportunityListCard> {
+  bool _expanded = false;
 
   String _formatDateRange() {
     final formatter = DateFormat('d MMM', 'es');
-    return '${formatter.format(opportunity.dateFrom)} - ${formatter.format(opportunity.dateTo)}';
+    return '${formatter.format(widget.opportunity.dateFrom)} - ${formatter.format(widget.opportunity.dateTo)}';
+  }
+
+  void _toggleExpand() {
+    if (!widget.isManager) return;
+    setState(() => _expanded = !_expanded);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: opportunity.isOpen
-                      ? const Color(0x1A10B77F)
-                      : const Color(0x1AA1A1AA),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  opportunity.isOpen ? 'ABIERTA' : 'CERRADA',
-                  style: TextStyle(
-                    color: opportunity.isOpen
-                        ? const Color(0xFF10B77F)
-                        : const Color(0xFF71717A),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              const Icon(Icons.chevron_right, color: Color(0xFF94A3B8)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            opportunity.title,
-            style: const TextStyle(
-              color: Color(0xFF0F172A),
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
+    return GestureDetector(
+      onTap: _toggleExpand,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0F000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
             ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              const Icon(
-                Icons.location_on_outlined,
-                size: 16,
-                color: Color(0xFF64748B),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  opportunity.city,
-                  style: const TextStyle(
-                    color: Color(0xFF64748B),
-                    fontSize: 13,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: widget.opportunity.isOpen
+                        ? const Color(0x1A10B77F)
+                        : const Color(0x1AA1A1AA),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    widget.opportunity.isOpen ? 'ABIERTA' : 'CERRADA',
+                    style: TextStyle(
+                      color: widget.opportunity.isOpen
+                          ? const Color(0xFF10B77F)
+                          : const Color(0xFF71717A),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                    ),
                   ),
                 ),
+                const Spacer(),
+                if (widget.isManager)
+                  Icon(
+                    _expanded ? Icons.expand_less : Icons.chevron_right,
+                    color: const Color(0xFF94A3B8),
+                  )
+                else
+                  const Icon(Icons.chevron_right, color: Color(0xFF94A3B8)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              widget.opportunity.title,
+              style: const TextStyle(
+                color: Color(0xFF0F172A),
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
               ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              const Icon(
-                Icons.calendar_today_outlined,
-                size: 15,
-                color: Color(0xFF64748B),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                _formatDateRange(),
-                style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
-              ),
-              const Spacer(),
-              Text(
-                'Plazas: ${opportunity.seats}',
-                style: const TextStyle(
-                  color: Color(0xFF10B77F),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 16,
+                  color: Color(0xFF64748B),
                 ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    widget.opportunity.city,
+                    style: const TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 15,
+                  color: Color(0xFF64748B),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _formatDateRange(),
+                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                ),
+                const Spacer(),
+                Text(
+                  'Plazas: ${widget.opportunity.seats}',
+                  style: const TextStyle(
+                    color: Color(0xFF10B77F),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            if (_expanded && widget.isManager) ...[
+              const SizedBox(height: 12),
+              OpportunityApplicationsSection(
+                opportunityId: widget.opportunity.id,
               ),
             ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
