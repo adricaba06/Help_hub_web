@@ -148,9 +148,47 @@ class OrganizationService implements CreateOrganizationInterface {
     int page = 0,
     int size = 5,
   }) async {
+    return getOrganizations(page: page, size: size, includeAll: false);
+  }
+
+  @override
+  Future<OrganizationListResponse> getAllOrganizations({
+    int page = 0,
+    int size = 8,
+    String? name,
+    String? city,
+  }) async {
+    return getOrganizations(
+      page: page,
+      size: size,
+      includeAll: true,
+      name: name,
+      city: city,
+    );
+  }
+
+  Future<OrganizationListResponse> getOrganizations({
+    int page = 0,
+    int size = 8,
+    bool includeAll = false,
+    String? name,
+    String? city,
+  }) async {
     final headers = await _jsonHeaders();
+    final endpoint = includeAll ? '$_apiBaseUrl/organizations/all' : '$_apiBaseUrl/organizations';
+    final query = <String, String>{'page': '$page', 'size': '$size'};
+
+    final normalizedName = name?.trim();
+    if (normalizedName != null && normalizedName.isNotEmpty) {
+      query['name'] = normalizedName;
+    }
+    final normalizedCity = city?.trim();
+    if (normalizedCity != null && normalizedCity.isNotEmpty) {
+      query['city'] = normalizedCity;
+    }
+
     final response = await http.get(
-      Uri.parse('$_apiBaseUrl/organizations?page=$page&size=$size'),
+      Uri.parse(endpoint).replace(queryParameters: query),
       headers: headers,
     );
 
@@ -187,20 +225,32 @@ class OrganizationService implements CreateOrganizationInterface {
   @override
   Future<Organization> getOrganizationById(int id) async {
     final headers = await _jsonHeaders();
-    final response = await http.get(
-      Uri.parse('$_apiBaseUrl/organizations/$id'),
-      headers: headers,
-    );
+    final endpointCandidates = <String>[
+      '$_apiBaseUrl/organizations/$id',
+      '$_apiBaseUrl/api/organizations/$id',
+    ];
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return Organization.fromJson(jsonDecode(response.body));
-    } else if (response.statusCode == 401) {
-      await _storageService.clear();
-      SessionService.instance.notifyUnauthorized();
-      throw Exception('Sesion expirada. Inicia sesion nuevamente.');
-    } else {
-      throw Exception('Error al obtener el detalle de la organizacion');
+    String? lastError;
+    for (final endpoint in endpointCandidates) {
+      final response = await http.get(Uri.parse(endpoint), headers: headers);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Organization.fromJson(jsonDecode(response.body));
+      }
+      if (response.statusCode == 401) {
+        await _storageService.clear();
+        SessionService.instance.notifyUnauthorized();
+        throw Exception('Sesion expirada. Inicia sesion nuevamente.');
+      }
+
+      lastError =
+          'Error al obtener detalle (${response.statusCode}) en $endpoint: ${response.body}';
+      if (response.statusCode != 404) {
+        break;
+      }
     }
+
+    throw Exception(lastError ?? 'Error al obtener el detalle de la organizacion');
   }
 
   Future<OpportunityPageResponse> getOpportunitiesByOrganizationId({

@@ -116,7 +116,10 @@ class _AuthWrapper extends StatelessWidget {
         if (state is AuthAuthenticated) {
           final role = state.user.role.trim().toUpperCase();
 
-          if (role == 'MANAGER' || role == 'ROLE_MANAGER') {
+          if (role == 'MANAGER' ||
+              role == 'ROLE_MANAGER' ||
+              role == 'ADMIN' ||
+              role == 'ROLE_ADMIN') {
             // manager
             return const OrganizationListManagerView();
           }

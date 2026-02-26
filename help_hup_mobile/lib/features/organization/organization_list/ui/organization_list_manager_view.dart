@@ -18,9 +18,7 @@ class OrganizationListManagerView extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<OrganizationListPageBloc>(
-          create: (_) =>
-              OrganizationListPageBloc(OrganizationService())
-                ..add(LoadManagerOrganizations()),
+          create: (_) => OrganizationListPageBloc(OrganizationService()),
         ),
         BlocProvider<DeleteOrganizationBloc>(
           create: (_) => DeleteOrganizationBloc(OrganizationService()),
@@ -41,11 +39,27 @@ class _OrganizationListScreen extends StatefulWidget {
 class _OrganizationListScreenState extends State<_OrganizationListScreen> {
   static const double _loadMoreThreshold = 200;
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _nameFilterController = TextEditingController();
+  final TextEditingController _cityFilterController = TextEditingController();
+  bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _loadInitialOrganizations();
+  }
+
+  Future<void> _loadInitialOrganizations() async {
+    final user = await StorageService().getUser();
+    final role = user?.role.trim().toUpperCase() ?? '';
+    final isAdmin = role == 'ADMIN' || role == 'ROLE_ADMIN';
+    if (!mounted) return;
+
+    setState(() => _isAdmin = isAdmin);
+    context.read<OrganizationListPageBloc>().add(
+      LoadOrganizations(size: 8, fetchAll: isAdmin),
+    );
   }
 
   void _onScroll() {
@@ -59,15 +73,30 @@ class _OrganizationListScreenState extends State<_OrganizationListScreen> {
     if (state is! OrganizationListPageLoaded) return;
     if (state.isLoadingMore || state.hasReachedEnd) return;
 
-    bloc.add(LoadMoreManagerOrganizations(size: state.pageSize));
+    bloc.add(LoadMoreOrganizations(size: state.pageSize));
   }
 
   @override
   void dispose() {
+    _nameFilterController.dispose();
+    _cityFilterController.dispose();
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
     super.dispose();
+  }
+
+  void _applyAdminFilters() {
+    final name = _nameFilterController.text.trim();
+    final city = _cityFilterController.text.trim();
+    context.read<OrganizationListPageBloc>().add(
+      LoadOrganizations(
+        size: 8,
+        fetchAll: true,
+        name: name.isEmpty ? null : name,
+        city: city.isEmpty ? null : city,
+      ),
+    );
   }
 
   @override
@@ -93,7 +122,7 @@ class _OrganizationListScreenState extends State<_OrganizationListScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              const _TopHeader(),
+              _TopHeader(isAdmin: _isAdmin),
               Expanded(
                 child:
                     BlocBuilder<
@@ -113,7 +142,7 @@ class _OrganizationListScreenState extends State<_OrganizationListScreen> {
                             error: state.error,
                             onRetry: () {
                               context.read<OrganizationListPageBloc>().add(
-                                LoadManagerOrganizations(size: 5),
+                                LoadOrganizations(size: 8, fetchAll: _isAdmin),
                               );
                             },
                           );
@@ -129,7 +158,12 @@ class _OrganizationListScreenState extends State<_OrganizationListScreen> {
                           return RefreshIndicator(
                             onRefresh: () async {
                               context.read<OrganizationListPageBloc>().add(
-                                LoadManagerOrganizations(size: state.pageSize),
+                                LoadOrganizations(
+                                  size: state.pageSize,
+                                  fetchAll: state.fetchAll,
+                                  name: state.nameFilter,
+                                  city: state.cityFilter,
+                                ),
                               );
                             },
                             child: ListView(
@@ -140,13 +174,31 @@ class _OrganizationListScreenState extends State<_OrganizationListScreen> {
                                 _PanelCard(
                                   totalOrgs: state.totalElements,
                                   totalCities: uniqueCities,
+                                  isAdmin: state.fetchAll,
                                 ),
                                 const SizedBox(height: 16),
+                                if (state.fetchAll)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: _AdminFiltersCard(
+                                      nameController: _nameFilterController,
+                                      cityController: _cityFilterController,
+                                      onApply: _applyAdminFilters,
+                                      onClear: () {
+                                        _nameFilterController.clear();
+                                        _cityFilterController.clear();
+                                        _applyAdminFilters();
+                                      },
+                                    ),
+                                  ),
                                 if (organizations.isEmpty) const _EmptyBlock(),
                                 ...organizations.map(
                                   (org) => Padding(
                                     padding: const EdgeInsets.only(bottom: 12),
-                                    child: _OrganizationCard(org: org),
+                                    child: _OrganizationCard(
+                                      org: org,
+                                      canDelete: !state.fetchAll,
+                                    ),
                                   ),
                                 ),
                                 if (!state.hasReachedEnd && !state.isLoadingMore)
@@ -161,7 +213,7 @@ class _OrganizationListScreenState extends State<_OrganizationListScreen> {
                                           context
                                               .read<OrganizationListPageBloc>()
                                               .add(
-                                                LoadMoreManagerOrganizations(
+                                                LoadMoreOrganizations(
                                                   size: state.pageSize,
                                                 ),
                                               );
@@ -227,7 +279,9 @@ class _OrganizationListScreenState extends State<_OrganizationListScreen> {
 }
 
 class _TopHeader extends StatelessWidget {
-  const _TopHeader();
+  final bool isAdmin;
+
+  const _TopHeader({required this.isAdmin});
 
   @override
   Widget build(BuildContext context) {
@@ -253,12 +307,12 @@ class _TopHeader extends StatelessWidget {
             child: const Icon(Icons.apartment, color: Color(0xFF334155)),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Mis Organizaciones',
+              isAdmin ? 'Todas las Organizaciones' : 'Mis Organizaciones',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Color(0xFF0F172A),
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -266,30 +320,31 @@ class _TopHeader extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CrearOrganizacionScreen(),
+          if (!isAdmin)
+            SizedBox(
+              width: 40,
+              height: 40,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CrearOrganizacionScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B77F),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.zero,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
                   ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10B77F),
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.zero,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
                 ),
+                child: const Icon(Icons.add),
               ),
-              child: const Icon(Icons.add),
             ),
-          ),
         ],
       ),
     );
@@ -299,8 +354,13 @@ class _TopHeader extends StatelessWidget {
 class _PanelCard extends StatelessWidget {
   final int totalOrgs;
   final int totalCities;
+  final bool isAdmin;
 
-  const _PanelCard({required this.totalOrgs, required this.totalCities});
+  const _PanelCard({
+    required this.totalOrgs,
+    required this.totalCities,
+    required this.isAdmin,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -325,8 +385,152 @@ class _PanelCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Gestionas $totalOrgs organizaciones activas en $totalCities ciudades.',
+            isAdmin
+                ? 'Ves $totalOrgs organizaciones registradas en $totalCities ciudades.'
+                : 'Gestionas $totalOrgs organizaciones activas en $totalCities ciudades.',
             style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AdminFiltersCard extends StatelessWidget {
+  final TextEditingController nameController;
+  final TextEditingController cityController;
+  final VoidCallback onApply;
+  final VoidCallback onClear;
+
+  const _AdminFiltersCard({
+    required this.nameController,
+    required this.cityController,
+    required this.onApply,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FCFB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x3310B77F)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Filtros',
+            style: TextStyle(
+              color: Color(0xFF10B77F),
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Busca por nombre o ciudad para acotar resultados',
+            style: TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: nameController,
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              hintText: 'Nombre de organizacion',
+              hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+              prefixIcon: const Icon(Icons.badge_outlined, size: 18),
+              filled: true,
+              fillColor: Colors.white,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFF10B77F)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: cityController,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => onApply(),
+            decoration: InputDecoration(
+              hintText: 'Ciudad',
+              hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+              prefixIcon: const Icon(Icons.location_city_outlined, size: 18),
+              filled: true,
+              fillColor: Colors.white,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFF10B77F)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onClear,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF475569),
+                    side: const BorderSide(color: Color(0xFFD1D5DB)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  child: const Text('Limpiar'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: onApply,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B77F),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  child: const Text('Aplicar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -336,8 +540,9 @@ class _PanelCard extends StatelessWidget {
 
 class _OrganizationCard extends StatelessWidget {
   final Organization org;
+  final bool canDelete;
 
-  const _OrganizationCard({required this.org});
+  const _OrganizationCard({required this.org, required this.canDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -396,49 +601,50 @@ class _OrganizationCard extends StatelessWidget {
                 ],
               ),
             ),
-            TextButton(
-              onPressed: () async {
-                final deleteBloc = context.read<DeleteOrganizationBloc>();
-                final shouldDelete = await showDialog<bool>(
-                  context: context,
-                  builder: (dialogContext) {
-                    return AlertDialog(
-                      title: const Text('Confirmar eliminacion'),
-                      content: Text(
-                        'Seguro que quieres eliminar "${org.name}"?',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop(false);
-                          },
-                          child: const Text('Cancelar'),
+            if (canDelete)
+              TextButton(
+                onPressed: () async {
+                  final deleteBloc = context.read<DeleteOrganizationBloc>();
+                  final shouldDelete = await showDialog<bool>(
+                    context: context,
+                    builder: (dialogContext) {
+                      return AlertDialog(
+                        title: const Text('Confirmar eliminacion'),
+                        content: Text(
+                          'Seguro que quieres eliminar "${org.name}"?',
                         ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop(true);
-                          },
-                          child: const Text(
-                            'Eliminar',
-                            style: TextStyle(color: Colors.red),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop(false);
+                            },
+                            child: const Text('Cancelar'),
                           ),
-                        ),
-                      ],
-                    );
-                  },
-                );
-
-                if (shouldDelete == true) {
-                  deleteBloc.add(
-                    SubmitDeleteOrganization(organizationId: org.id),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop(true);
+                            },
+                            child: const Text(
+                              'Eliminar',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   );
-                }
-              },
-              child: const Text(
-                'Eliminar',
-                style: TextStyle(color: Colors.red),
+
+                  if (shouldDelete == true) {
+                    deleteBloc.add(
+                      SubmitDeleteOrganization(organizationId: org.id),
+                    );
+                  }
+                },
+                child: const Text(
+                  'Eliminar',
+                  style: TextStyle(color: Colors.red),
+                ),
               ),
-            ),
           ],
         ),
       ),

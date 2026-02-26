@@ -13,6 +13,13 @@ abstract class CreateOrganizationInterface {
     int size = 5,
   });
 
+  Future<OrganizationListResponse> getAllOrganizations({
+    int page = 0,
+    int size = 8,
+    String? name,
+    String? city,
+  });
+
   Future<Organization> deleteOrganization(int id);
 
   Future<Organization> getOrganizationById(int id);
