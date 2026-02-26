@@ -13,29 +13,39 @@ class OrganizationListPageBloc
 
   OrganizationListPageBloc(this.organizationService)
     : super(OrganizationListPageInitial()) {
-    on<LoadManagerOrganizations>(_onLoadManagerOrganizations);
-    on<LoadMoreManagerOrganizations>(_onLoadMoreManagerOrganizations);
+    on<LoadOrganizations>(_onLoadOrganizations);
+    on<LoadMoreOrganizations>(_onLoadMoreOrganizations);
     on<RemoveOrganizationFromList>(_onRemoveOrganizationFromList);
   }
 
-  Future<void> _onLoadManagerOrganizations(
-    LoadManagerOrganizations event,
+  Future<void> _onLoadOrganizations(
+    LoadOrganizations event,
     Emitter<OrganizationListPageState> emit,
   ) async {
     if (_isFetching) return;
     _isFetching = true;
     emit(OrganizationListPageLoading());
     try {
-      final organizations = await organizationService.getManagersOrganizations(
-        page: 0,
-        size: event.size,
-      );
+      final organizations = event.fetchAll
+          ? await organizationService.getAllOrganizations(
+              page: 0,
+              size: event.size,
+              name: event.name,
+              city: event.city,
+            )
+          : await organizationService.getManagersOrganizations(
+              page: 0,
+              size: event.size,
+            );
       emit(
         OrganizationListPageLoaded(
           organizations: organizations.content,
           totalElements: organizations.totalElements,
           totalPages: organizations.totalPages,
           currentPage: 0,
+          fetchAll: event.fetchAll,
+          nameFilter: event.name,
+          cityFilter: event.city,
           pageSize: event.size,
         ),
       );
@@ -46,8 +56,8 @@ class OrganizationListPageBloc
     }
   }
 
-  Future<void> _onLoadMoreManagerOrganizations(
-    LoadMoreManagerOrganizations event,
+  Future<void> _onLoadMoreOrganizations(
+    LoadMoreOrganizations event,
     Emitter<OrganizationListPageState> emit,
   ) async {
     final currentState = state;
@@ -60,10 +70,17 @@ class OrganizationListPageBloc
 
     final nextPage = currentState.currentPage + 1;
     try {
-      final nextResponse = await organizationService.getManagersOrganizations(
-        page: nextPage,
-        size: event.size,
-      );
+      final nextResponse = currentState.fetchAll
+          ? await organizationService.getAllOrganizations(
+              page: nextPage,
+              size: event.size,
+              name: currentState.nameFilter,
+              city: currentState.cityFilter,
+            )
+          : await organizationService.getManagersOrganizations(
+              page: nextPage,
+              size: event.size,
+            );
 
       // Avoid duplicates if backend returns overlapping records across pages.
       final merged = <Organization>[
@@ -81,6 +98,9 @@ class OrganizationListPageBloc
           totalElements: nextResponse.totalElements,
           totalPages: nextResponse.totalPages,
           currentPage: nextPage,
+          fetchAll: currentState.fetchAll,
+          nameFilter: currentState.nameFilter,
+          cityFilter: currentState.cityFilter,
           isLoadingMore: false,
           pageSize: event.size,
         ),

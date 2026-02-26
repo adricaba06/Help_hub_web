@@ -3,16 +3,24 @@ part of 'organization_list_page_bloc.dart';
 @immutable
 sealed class OrganizationListPageEvent {}
 
-class LoadManagerOrganizations extends OrganizationListPageEvent {
+class LoadOrganizations extends OrganizationListPageEvent {
   final int size;
+  final bool fetchAll;
+  final String? name;
+  final String? city;
 
-  LoadManagerOrganizations({this.size = 5});
+  LoadOrganizations({
+    this.size = 5,
+    this.fetchAll = false,
+    this.name,
+    this.city,
+  });
 }
 
-class LoadMoreManagerOrganizations extends OrganizationListPageEvent {
+class LoadMoreOrganizations extends OrganizationListPageEvent {
   final int size;
 
-  LoadMoreManagerOrganizations({this.size = 5});
+  LoadMoreOrganizations({this.size = 5});
 }
 
 class RemoveOrganizationFromList extends OrganizationListPageEvent {

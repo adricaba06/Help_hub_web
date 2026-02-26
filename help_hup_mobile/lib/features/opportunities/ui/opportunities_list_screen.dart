@@ -7,6 +7,7 @@ import '../../../widgets/app_bottom_nav_bar.dart';
 import '../../../widgets/opportunity_card.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/ui/login_screen.dart';
+import '../../applications/ui/applications_list_screen.dart';
 import '../../favourites/ui/list_favourite_screen.dart';
 import '../../profile/ui/profile_screen.dart';
 import '../bloc/opportunity_bloc.dart';
@@ -138,7 +139,18 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
   }
 
   void _onBottomNavTap(int index) {
-    if (index == 2) {
+    if (index == 1) {
+      final authState = context.read<AuthBloc>().state;
+      if (authState is AuthAuthenticated) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const ApplicationsListScreen()),
+        );
+      } else {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
+    } else if (index == 2) {
       final authState = context.read<AuthBloc>().state;
       if (authState is AuthAuthenticated) {
         Navigator.of(context).pushReplacement(
@@ -417,28 +429,40 @@ class _OpportunitiesListScreenState extends State<OpportunitiesListScreen> {
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
                                 final opportunity = state.opportunities[index];
-                                final showFavoriteButton = _isUserRole(
+                                final canFavorite = _isUserRole(
                                   context.read<AuthBloc>().state,
-                                );
+                                ) && opportunity.isOpen;
+                                
                                 return InkWell(
+                                  borderRadius: BorderRadius.circular(16),
                                   onTap: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => ChangeNotifierProvider(
-                                          create: (_) => OpportunityDetailProvider(),
-                                          child: OpportunityDetailScreen(opportunityId: opportunity.id),
+                                          create: (_) =>
+                                              OpportunityDetailProvider(),
+                                          child: OpportunityDetailScreen(
+                                            opportunityId: opportunity.id,
+                                          ),
                                       ),
                                     ),
                                   );
                                 },
                                 child: OpportunityCard(
                                   opportunity: opportunity,
-                                  showFavoriteButton: showFavoriteButton,
-                                  isFavorite: _favoriteIds.contains(opportunity.id),
-                                  isFavoriteLoading: _favoriteUpdatingIds.contains(opportunity.id),
-                                  onFavoriteTap: showFavoriteButton ? () => _toggleFavorite(opportunity.id) : null,
-                                ),
+                                  showFavoriteButton: canFavorite,
+                                    isFavorite: _favoriteIds.contains(
+                                      opportunity.id,
+                                    ),
+                                    isFavoriteLoading:
+                                        _favoriteUpdatingIds.contains(
+                                          opportunity.id,
+                                        ),
+                                  onFavoriteTap: canFavorite
+                                      ? () => _toggleFavorite(opportunity.id)
+                                      : null,
+                                  ),
                               );
                               
                               },

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../widgets/app_bottom_nav_bar.dart';
+import '../../applications/ui/applications_list_screen.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/ui/login_screen.dart';
+import '../../change_password/ui/change_password_screen.dart';
 import '../../favourites/ui/list_favourite_screen.dart';
 import '../../opportunities/ui/opportunities_list_screen.dart';
 import '../../organization/organization_list/ui/organization_list_manager_view.dart';
@@ -45,7 +47,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isAuthenticated = authState is AuthAuthenticated;
     final isManager = authState is AuthAuthenticated &&
         (authState.user.role.trim().toUpperCase() == 'MANAGER' ||
-            authState.user.role.trim().toUpperCase() == 'ROLE_MANAGER');
+            authState.user.role.trim().toUpperCase() == 'ROLE_MANAGER' ||
+            authState.user.role.trim().toUpperCase() == 'ADMIN' ||
+            authState.user.role.trim().toUpperCase() == 'ROLE_ADMIN');
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8F7),
@@ -91,6 +95,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (authState is AuthAuthenticated) {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (_) => const ListFavouriteScreen()),
+              );
+            } else {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
+            }
+          } else if (!isManager && index == 1) {
+            final authState = context.read<AuthBloc>().state;
+            if (authState is AuthAuthenticated) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const ApplicationsListScreen()),
               );
             } else {
               Navigator.of(context).push(
@@ -332,7 +347,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _ActionButton(
                   label: 'Cambiar contraseña',
                   icon: Icons.edit,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ChangePasswordScreen(),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 10),
                 _ActionButton(

@@ -12,6 +12,9 @@ final class OrganizationListPageLoaded extends OrganizationListPageState {
   final int totalElements;
   final int totalPages;
   final int currentPage;
+  final bool fetchAll;
+  final String? nameFilter;
+  final String? cityFilter;
   final bool isLoadingMore;
   final int pageSize;
 
@@ -23,6 +26,9 @@ final class OrganizationListPageLoaded extends OrganizationListPageState {
     required this.totalElements,
     required this.totalPages,
     required this.currentPage,
+    required this.fetchAll,
+    this.nameFilter,
+    this.cityFilter,
     required this.pageSize,
     this.isLoadingMore = false,
   });
@@ -32,6 +38,9 @@ final class OrganizationListPageLoaded extends OrganizationListPageState {
     int? totalElements,
     int? totalPages,
     int? currentPage,
+    bool? fetchAll,
+    String? nameFilter,
+    String? cityFilter,
     bool? isLoadingMore,
     int? pageSize,
   }) {
@@ -40,6 +49,9 @@ final class OrganizationListPageLoaded extends OrganizationListPageState {
       totalElements: totalElements ?? this.totalElements,
       totalPages: totalPages ?? this.totalPages,
       currentPage: currentPage ?? this.currentPage,
+      fetchAll: fetchAll ?? this.fetchAll,
+      nameFilter: nameFilter ?? this.nameFilter,
+      cityFilter: cityFilter ?? this.cityFilter,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       pageSize: pageSize ?? this.pageSize,
     );

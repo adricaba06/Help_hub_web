@@ -5,6 +5,7 @@ import '../../../widgets/app_bottom_nav_bar.dart';
 import '../../../widgets/opportunity_card.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/ui/login_screen.dart';
+import '../../applications/ui/applications_list_screen.dart';
 import '../bloc/bloc_bloc.dart';
 import '../../opportunities/ui/opportunities_list_screen.dart';
 import '../../profile/ui/profile_screen.dart';
@@ -73,6 +74,17 @@ class _ListFavouriteScreenState extends State<ListFavouriteScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const OpportunitiesListScreen()),
       );
+    } else if (index == 1) {
+      final authState = context.read<AuthBloc>().state;
+      if (authState is AuthAuthenticated) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const ApplicationsListScreen()),
+        );
+      } else {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
     } else if (index == 3) {
       final authState = context.read<AuthBloc>().state;
       if (authState is AuthAuthenticated) {
