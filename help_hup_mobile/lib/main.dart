@@ -74,7 +74,7 @@ class _HelpHubAppState extends State<HelpHubApp> {
             listener: (context, state) {
               if (state is AuthUnauthenticated) {
                 _navigatorKey.currentState?.pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  MaterialPageRoute(builder: (_) => const OpportunitiesListScreen()),
                   (route) => false,
                 );
               }

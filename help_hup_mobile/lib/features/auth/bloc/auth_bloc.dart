@@ -67,7 +67,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       try {
         await authService.logout(token);
       } catch (_) {
-        // Local cleanup proceeds even when backend logout fails.
       }
     }
 
