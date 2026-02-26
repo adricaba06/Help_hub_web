@@ -65,12 +65,15 @@ class _LoginScreenState extends State<LoginScreen> {
       listener: (context, state) {
         if (state is AuthAuthenticated) {
           final role = state.user.role.trim().toUpperCase();
-          final goToManager =
-              role == 'MANAGER' || role == 'ROLE_MANAGER';
+          final goToOrganizationList =
+              role == 'MANAGER' ||
+              role == 'ROLE_MANAGER' ||
+              role == 'ADMIN' ||
+              role == 'ROLE_ADMIN';
 
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
-              builder: (_) => goToManager
+              builder: (_) => goToOrganizationList
                   ? const OrganizationListManagerView()
                   : const OpportunitiesListScreen(),
             ),

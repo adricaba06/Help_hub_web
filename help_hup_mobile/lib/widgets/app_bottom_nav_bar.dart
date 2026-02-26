@@ -19,11 +19,15 @@ class AppBottomNavBar extends StatelessWidget {
         final role = state is AuthAuthenticated
             ? state.user.role.trim().toUpperCase()
             : '';
-        final isManager = role == 'MANAGER' || role == 'ROLE_MANAGER';
-        final effectiveIndex = isManager
+        final isOrganizationRole =
+            role == 'MANAGER' ||
+            role == 'ROLE_MANAGER' ||
+            role == 'ADMIN' ||
+            role == 'ROLE_ADMIN';
+        final effectiveIndex = isOrganizationRole
             ? (currentIndex == 1 || currentIndex == 3 ? 1 : 0)
             : currentIndex;
-        final items = isManager
+        final items = isOrganizationRole
             ? const [
                 BottomNavigationBarItem(
                   icon: Icon(Icons.apartment_outlined),

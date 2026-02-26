@@ -47,7 +47,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isAuthenticated = authState is AuthAuthenticated;
     final isManager = authState is AuthAuthenticated &&
         (authState.user.role.trim().toUpperCase() == 'MANAGER' ||
-            authState.user.role.trim().toUpperCase() == 'ROLE_MANAGER');
+            authState.user.role.trim().toUpperCase() == 'ROLE_MANAGER' ||
+            authState.user.role.trim().toUpperCase() == 'ADMIN' ||
+            authState.user.role.trim().toUpperCase() == 'ROLE_ADMIN');
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8F7),
