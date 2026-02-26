@@ -8,3 +8,15 @@ class ProfileEditSubmitted extends ProfileEditEvent {
 
   ProfileEditSubmitted({required this.newName});
 }
+
+class ProfilePictureUploadStarted extends ProfileEditEvent {
+  final File imageFile;
+
+  ProfilePictureUploadStarted({required this.imageFile});
+}
+
+class ProfileUserUpdated extends ProfileEditEvent {
+  final UserResponse user;
+
+  ProfileUserUpdated({required this.user});
+}

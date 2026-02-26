@@ -9,8 +9,12 @@ final class ProfileEditLoading extends ProfileEditState {}
 
 final class ProfileEditSuccess extends ProfileEditState {
   final UserResponse user;
-  
-  ProfileEditSuccess({required this.user});
+  final bool imageUploaded;
+
+  ProfileEditSuccess({
+    required this.user,
+    this.imageUploaded = false,
+  });
 }
 
 final class ProfileEditFailure extends ProfileEditState {
