@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:help_hup_mobile/core/models/opportunity_filter.dart';
 import 'package:help_hup_mobile/core/models/opportunity_response.dart';
 import 'package:help_hup_mobile/core/services/organization/organization_service.dart';
+import 'package:help_hup_mobile/features/opportunity/create_opportunity_form_page/ui/create_opportunity_form_page_view.dart';
 import 'package:help_hup_mobile/features/organization/organization_opportunities/bloc/organization_opportunities_bloc.dart';
 import 'package:intl/intl.dart';
 
@@ -26,6 +27,7 @@ class OrganizationOpportunitiesView extends StatelessWidget {
         organizationId: organizationId,
       )..add(const LoadOrganizationOpportunities()),
       child: _OrganizationOpportunitiesScreen(
+        organizationId: organizationId,
         organizationName: organizationName,
       ),
     );
@@ -33,9 +35,13 @@ class OrganizationOpportunitiesView extends StatelessWidget {
 }
 
 class _OrganizationOpportunitiesScreen extends StatefulWidget {
+  final int organizationId;
   final String organizationName;
 
-  const _OrganizationOpportunitiesScreen({required this.organizationName});
+  const _OrganizationOpportunitiesScreen({
+    required this.organizationId,
+    required this.organizationName,
+  });
 
   @override
   State<_OrganizationOpportunitiesScreen> createState() =>
@@ -134,6 +140,22 @@ class _OrganizationOpportunitiesScreenState
         ),
       ),
     );
+  }
+
+  Future<void> _goToCreateOpportunity() async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) =>
+            CreateOpportunityFormPageView(organizationId: widget.organizationId),
+      ),
+    );
+
+    if (!mounted) return;
+    if (created == true) {
+      context.read<OrganizationOpportunitiesBloc>().add(
+        const RefreshOrganizationOpportunities(),
+      );
+    }
   }
 
   String _dateRangeLabel() {
@@ -253,14 +275,30 @@ class _OrganizationOpportunitiesScreenState
                       ),
                     ],
                   ),
-                  IconButton(
-                    onPressed: () {
-                      context.read<OrganizationOpportunitiesBloc>().add(
-                        const RefreshOrganizationOpportunities(),
-                      );
-                    },
-                    icon: const Icon(Icons.refresh, color: Color(0xFF52525B)),
-                    tooltip: 'Recargar',
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: _goToCreateOpportunity,
+                        icon: const Icon(
+                          Icons.add_circle_outline,
+                          color: Color(0xFF10B77F),
+                        ),
+                        tooltip: 'Agregar oportunidad',
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          context.read<OrganizationOpportunitiesBloc>().add(
+                            const RefreshOrganizationOpportunities(),
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.refresh,
+                          color: Color(0xFF52525B),
+                        ),
+                        tooltip: 'Recargar',
+                      ),
+                    ],
                   ),
                 ],
               ),
