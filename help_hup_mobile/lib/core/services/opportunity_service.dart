@@ -166,7 +166,7 @@ class OpportunityService {
       throw Exception('NO_TOKEN');
     }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/opportunity/add');
+    final url = Uri.parse('${AppConfig.baseUrl}/opportunity/add');
     final response = await http.post(
       url,
       headers: {
