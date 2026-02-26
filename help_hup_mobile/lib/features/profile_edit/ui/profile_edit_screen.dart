@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/models/user_response.dart';
 import '../../../core/services/profile_service.dart';
 import '../bloc/profile_edit_bloc.dart';
@@ -30,6 +32,8 @@ class _ProfileEditView extends StatefulWidget {
 
 class _ProfileEditViewState extends State<_ProfileEditView> {
   late final TextEditingController _nameController;
+  File? _selectedImage;
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
@@ -41,6 +45,61 @@ class _ProfileEditViewState extends State<_ProfileEditView> {
   void dispose() {
     _nameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _selectedImage = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al seleccionar imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _selectedImage = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al capturar imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _uploadProfilePicture() {
+    if (_selectedImage == null) return;
+    context.read<ProfileEditBloc>().add(
+          ProfilePictureUploadStarted(imageFile: _selectedImage!),
+        );
   }
 
   void _submit() {
@@ -71,20 +130,32 @@ class _ProfileEditViewState extends State<_ProfileEditView> {
       body: BlocConsumer<ProfileEditBloc, ProfileEditState>(
         listener: (context, state) {
           if (state is ProfileEditSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Perfil actualizado correctamente'),
-                backgroundColor: Color(0xFF10B77F),
-              ),
-            );
-            // Actualizar el perfil en la pantalla anterior
-            context.read<ProfileBloc>().add(ProfileRequested());
-            Navigator.of(context).pop();
+            if (state.imageUploaded) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Foto de perfil actualizada correctamente'),
+                  backgroundColor: Color(0xFF10B77F),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+              // Actualizar el perfil en la pantalla anterior cuando se sube foto
+              context.read<ProfileBloc>().add(ProfileRequested());
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Perfil actualizado correctamente'),
+                  backgroundColor: Color(0xFF10B77F),
+                ),
+              );
+              context.read<ProfileBloc>().add(ProfileRequested());
+              Navigator.of(context).pop();
+            }
           } else if (state is ProfileEditFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: Colors.red,
+                duration: const Duration(seconds: 3),
               ),
             );
           }
@@ -101,29 +172,87 @@ class _ProfileEditViewState extends State<_ProfileEditView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Center(
-                    child: Stack(
-                      alignment: Alignment.bottomRight,
-                      children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Color(0xFFE6E6E6),
-                          child: Icon(
-                            Icons.person,
-                            size: 55,
-                            color: Colors.white,
+                  Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return Container(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.camera_alt),
+                                    title: const Text('Cámara'),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      _pickImageFromCamera();
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.photo),
+                                    title: const Text('Galería'),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      _pickImage();
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      child: Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundColor: const Color(0xFFE6E6E6),
+                            backgroundImage: _selectedImage != null
+                                ? FileImage(_selectedImage!)
+                                : (state is ProfileEditSuccess && state.user.profileImage != null
+                                    ? NetworkImage(state.user.profileImage!)
+                                    : (widget.user.profileImage != null
+                                        ? NetworkImage(widget.user.profileImage!)
+                                        : null)) as ImageProvider?,
+                            child: (_selectedImage == null &&
+                                    (state is! ProfileEditSuccess || state.user.profileImage == null) &&
+                                    widget.user.profileImage == null)
+                                ? const Icon(
+                                    Icons.person,
+                                    size: 55,
+                                    color: Colors.white,
+                                  )
+                                : null,
                           ),
-                        ),
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor: Color(0xFF10B77F),
-                          child: Icon(
-                            Icons.camera_alt,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                        )
-                      ],
+                          if (state is! ProfileEditLoading)
+                            const CircleAvatar(
+                              radius: 18,
+                              backgroundColor: Color(0xFF10B77F),
+                              child: Icon(
+                                Icons.camera_alt,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                            )
+                          else
+                            const CircleAvatar(
+                              radius: 18,
+                              backgroundColor: Color(0xFF10B77F),
+                              child: SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -160,6 +289,44 @@ class _ProfileEditViewState extends State<_ProfileEditView> {
                     ),
                   ),
                   const SizedBox(height: 32),
+                  if (_selectedImage != null)
+                    Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed:
+                                state is ProfileEditLoading ? null : _uploadProfilePicture,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF10B77F),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: state is ProfileEditLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Guardar foto de perfil',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

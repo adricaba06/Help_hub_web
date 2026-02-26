@@ -242,14 +242,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
             child: Column(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 40,
-                  backgroundColor: Color(0xFFE6E6E6),
-                  child: Icon(
-                    Icons.person,
-                    size: 42,
-                    color: Colors.white,
-                  ),
+                  backgroundColor: const Color(0xFFE6E6E6),
+                  backgroundImage: user.profileImage != null
+                      ? NetworkImage(user.profileImage!)
+                      : null,
+                  child: user.profileImage == null
+                      ? const Icon(
+                          Icons.person,
+                          size: 42,
+                          color: Colors.white,
+                        )
+                      : null,
                 ),
                 const SizedBox(height: 14),
                 Text(
