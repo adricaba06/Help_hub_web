@@ -27,6 +27,9 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
     final controller = TextEditingController();
 
     final provider = context.read<OpportunityDetailProvider>();
+    final detail = provider.detail;
+    final opp = detail?.opportunity;
+    final dialogDateFormat = DateFormat('d MMM y', 'es');
 
     final result = await showDialog<bool>(
       context: context,
@@ -35,20 +38,79 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
           title: const Text('Enviar solicitud'),
           content: Form(
             key: formKey,
-            child: TextFormField(
-              controller: controller,
-              maxLines: 6,
-              decoration: const InputDecoration(
-                labelText: 'Motivación',
-                hintText: 'Cuéntanos por qué quieres participar…',
-                border: OutlineInputBorder(),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (opp != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF6F8F7),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFE4E4E7)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            opp.city.toUpperCase(),
+                            style: const TextStyle(
+                              color: Color(0xFF10B77F),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            opp.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${dialogDateFormat.format(opp.dateFrom)} - ${dialogDateFormat.format(opp.dateTo)}',
+                            style: const TextStyle(
+                              color: Color(0xFF71717A),
+                              fontSize: 12,
+                            ),
+                          ),
+                          if (detail != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              'Plazas: ${detail.acceptedCount}/${opp.seats} ocupadas · Libres: ${detail.seatsLeft}',
+                              style: const TextStyle(
+                                color: Color(0xFF52525B),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  TextFormField(
+                    controller: controller,
+                    maxLines: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'Motivación',
+                      hintText: 'Cuéntanos por qué quieres participar…',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (v) {
+                      final txt = (v ?? '').trim();
+                      if (txt.isEmpty) return 'La motivación es obligatoria';
+                      if (txt.length < 10) return 'Mínimo 10 caracteres';
+                      return null;
+                    },
+                  ),
+                ],
               ),
-              validator: (v) {
-                final txt = (v ?? '').trim();
-                if (txt.isEmpty) return 'La motivación es obligatoria';
-                if (txt.length < 10) return 'Mínimo 10 caracteres';
-                return null;
-              },
             ),
           ),
           actions: [
@@ -64,12 +126,12 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
                       : () async {
                           if (!formKey.currentState!.validate()) return;
 
-                          final res = await provider.apply(
+                          final ok = await provider.apply(
                             opportunityId,
                             controller.text,
                           );
 
-                          if (res != null) {
+                          if (ok) {
                             Navigator.pop(context, true);
                           } else {
                             // El dialog se mantiene abierto y el error se maneja fuera.
@@ -95,7 +157,7 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
     if (result == true) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Solicitud enviada')),
+        const SnackBar(content: Text('Solicitud enviada ✅')),
       );
     } else {
       final err = provider.applyError;
@@ -211,14 +273,10 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
 
                 const SizedBox(height: 20),
 
-                // Botón solicitar (solo mostrar; la acción real es FEAT-003)
+                // Botón solicitar (voluntario que puede aplicar)
                 if (detail.canApply)
                   ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('TODO: Aplicar (feat-003)')),
-                      );
-                    },
+                    onPressed: () => _showApplyDialog(widget.opportunityId),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF10B77F),
                       foregroundColor: Colors.white,

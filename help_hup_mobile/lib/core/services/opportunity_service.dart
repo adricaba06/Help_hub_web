@@ -12,6 +12,13 @@ import 'storage_service.dart';
 class OpportunityService {
   final StorageService _storage = StorageService();
 
+  Future<ApplicationResponse> apply(int opportunityId, String motivationText) {
+    return applyToOpportunity(
+      opportunityId: opportunityId,
+      motivationText: motivationText,
+    );
+  }
+
   Future<List<OpportunityResponse>> searchOpportunities({
     String? query,
     String? city,
@@ -120,7 +127,7 @@ class OpportunityService {
         'Authorization': 'Bearer $token',
       },
       body: jsonEncode({
-        'motivationText': motivationText,
+        'motivationText': motivationText.trim(),
       }),
     );
 
@@ -129,8 +136,12 @@ class OpportunityService {
       return ApplicationResponse.fromJson(jsonMap);
     }
 
+    if (response.statusCode == 400) {
+      throw Exception('BAD_REQUEST');
+    }
+
     if (response.statusCode == 409) {
-      throw Exception('CONFLICT_${response.body}');
+      throw Exception('CONFLICT');
     }
 
     if (response.statusCode == 401) {
@@ -143,7 +154,7 @@ class OpportunityService {
       throw Exception('FORBIDDEN');
     }
 
-    throw Exception('HTTP_${response.statusCode}_${response.body}');
+    throw Exception('SERVER_ERROR');
   }
 
   Future<void> createOpportunity({
