@@ -2,6 +2,7 @@ class ApplicationResponse {
   final int id;
   final int opportunityId;
   final int userId;
+  final String userName;
   final String motivationText;
   final String status;
   final String opportunityTitle;
@@ -11,6 +12,7 @@ class ApplicationResponse {
     required this.id,
     required this.opportunityId,
     required this.userId,
+    required this.userName,
     required this.motivationText,
     required this.status,
     required this.opportunityTitle,
@@ -24,6 +26,7 @@ class ApplicationResponse {
       id: (json['id'] as num?)?.toInt() ?? 0,
       opportunityId: (json['opportunityId'] as num?)?.toInt() ?? 0,
       userId: (json['userId'] as num?)?.toInt() ?? 0,
+      userName: json['userName']?.toString() ?? json['userFullName']?.toString() ?? 'Usuario Anónimo',
       motivationText: json['motivationText']?.toString() ?? '',
       status: json['status']?.toString() ?? 'PENDING',
       opportunityTitle: json['opportunityTitle']?.toString() ?? '',

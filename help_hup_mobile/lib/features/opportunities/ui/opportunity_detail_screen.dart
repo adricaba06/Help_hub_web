@@ -22,163 +22,6 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
     });
   }
 
-  Future<void> _showApplyDialog(int opportunityId) async {
-    final formKey = GlobalKey<FormState>();
-    final controller = TextEditingController();
-
-    final provider = context.read<OpportunityDetailProvider>();
-    final detail = provider.detail;
-    final opp = detail?.opportunity;
-    final dialogDateFormat = DateFormat('d MMM y', 'es');
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (_) {
-        return AlertDialog(
-          title: const Text('Enviar solicitud'),
-          content: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (opp != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF6F8F7),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFE4E4E7)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            opp.city.toUpperCase(),
-                            style: const TextStyle(
-                              color: Color(0xFF10B77F),
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            opp.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${dialogDateFormat.format(opp.dateFrom)} - ${dialogDateFormat.format(opp.dateTo)}',
-                            style: const TextStyle(
-                              color: Color(0xFF71717A),
-                              fontSize: 12,
-                            ),
-                          ),
-                          if (detail != null) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              'Plazas: ${detail.acceptedCount}/${opp.seats} ocupadas · Libres: ${detail.seatsLeft}',
-                              style: const TextStyle(
-                                color: Color(0xFF52525B),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  TextFormField(
-                    controller: controller,
-                    maxLines: 6,
-                    decoration: const InputDecoration(
-                      labelText: 'Motivación',
-                      hintText: 'Cuéntanos por qué quieres participar…',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (v) {
-                      final txt = (v ?? '').trim();
-                      if (txt.isEmpty) return 'La motivación es obligatoria';
-                      if (txt.length < 10) return 'Mínimo 10 caracteres';
-                      return null;
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
-            ),
-            Consumer<OpportunityDetailProvider>(
-              builder: (_, p, __) {
-                return FilledButton(
-                  onPressed: p.applying
-                      ? null
-                      : () async {
-                          if (!formKey.currentState!.validate()) return;
-
-                          final ok = await provider.apply(
-                            opportunityId,
-                            controller.text,
-                          );
-
-                          if (ok) {
-                            Navigator.pop(context, true);
-                          } else {
-                            // El dialog se mantiene abierto y el error se maneja fuera.
-                          }
-                        },
-                  child: p.applying
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Enviar'),
-                );
-              },
-            ),
-          ],
-        );
-      },
-    );
-
-    controller.dispose();
-
-    if (result == true) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Solicitud enviada ✅')),
-      );
-    } else {
-      final err = provider.applyError;
-      if (err != null && mounted) {
-        var msg = 'Error al enviar solicitud';
-
-        if (err.contains('NO_TOKEN') || err.contains('UNAUTHORIZED')) {
-          msg = 'Tienes que iniciar sesión';
-        } else if (err.contains('FORBIDDEN')) {
-          msg = 'No tienes permisos (rol incorrecto)';
-        } else if (err.contains('CONFLICT')) {
-          msg = 'Ya has aplicado a esta oportunidad o no está disponible';
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -276,7 +119,11 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
                 // Botón solicitar (voluntario que puede aplicar)
                 if (detail.canApply)
                   ElevatedButton(
-                    onPressed: () => _showApplyDialog(widget.opportunityId),
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Aplicar a oportunidad (feat-003)')),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF10B77F),
                       foregroundColor: Colors.white,
