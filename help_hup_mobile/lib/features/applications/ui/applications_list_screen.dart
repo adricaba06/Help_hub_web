@@ -472,30 +472,31 @@ class _ApplicationCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Detalle de solicitud proximamente.'),
+          if (application.status.trim().toUpperCase() != 'PENDING')
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Detalle de solicitud proximamente.'),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: visual.buttonBackground,
+                  foregroundColor: visual.buttonForeground,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: visual.buttonBackground,
-                foregroundColor: visual.buttonForeground,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _buttonLabel(application.status),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
-              child: Text(
-                _buttonLabel(application.status),
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
             ),
-          ),
         ],
       ),
     );
@@ -517,7 +518,6 @@ class _ApplicationCard extends StatelessWidget {
 
   String _buttonLabel(String status) {
     final normalized = status.trim().toUpperCase();
-    if (normalized == 'PENDING') return 'Retirar solicitud';
     if (normalized == 'ACCEPTED' || normalized == 'APPROVED') {
       return 'Ver detalles';
     }
